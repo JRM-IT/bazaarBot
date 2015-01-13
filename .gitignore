@@ -1,2 +1,9 @@
 Docs/LARC-2010-03.pdf
 Export/*
+BazaarBot.Engine/BazaarBot.ConsoleApp/bin/
+BazaarBot.Engine/BazaarBot.ConsoleApp/obj/
+BazaarBot.Engine/BazaarBot.Engine/bin/
+BazaarBot.Engine/BazaarBot.Engine/obj/
+BazaarBot.Engine/BazaarBot.Tests/bin/
+BazaarBot.Engine/BazaarBot.Tests/obj/
+BazaarBot.Engine/packages/
