@@ -8,17 +8,15 @@ namespace BazaarBot.Engine
 {
     public class BazaarBot
     {
-        public int num_commodities { get { return list_commodities.Count; } }
-        public int num_agents { get { return list_agents.Count; } }
-        List<string> list_commodities = new List<string>();
-        Dictionary<string, Commodity> _map_commodities = new Dictionary<string, Commodity>();
-        Dictionary<string, AgentClass> _agent_classes = new Dictionary<string, AgentClass>();
-        List<Agent> list_agents = new List<Agent>();
-        Dictionary<string, List<Offer>> book_bids = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<Offer>> book_asks = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<float>> _history_profit = new Dictionary<string, List<float>>();
-
-        private int _round_num;
+        public int num_commodities { get { return Commodities.Count; } }
+        public int num_agents { get { return Agents.Count; } }
+        public List<string> Commodities { get; private set; }
+        Dictionary<string, Commodity> _commodityMap = new Dictionary<string, Commodity>();
+        public Dictionary<string, AgentClass> AgentClasses { get; private set; }
+        public List<Agent> Agents { get; private set; }
+        Dictionary<string, List<Offer>> _bookBids = new Dictionary<string, List<Offer>>();
+        Dictionary<string, List<Offer>> _bookAsks = new Dictionary<string, List<Offer>>();
+        Dictionary<string, List<float>> _historyProfit = new Dictionary<string, List<float>>();
 
         private Dictionary<string, List<float>> history_price = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         private Dictionary<string, List<float>> history_asks = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
@@ -31,6 +29,10 @@ namespace BazaarBot.Engine
             JToken dataCommodoties = null;
             JToken dataStartConditions = null;
             JToken dataAgents = null;
+
+            Agents = new List<Agent>();
+            Commodities = new List<string>();
+            AgentClasses = new Dictionary<string, AgentClass>();
 
             foreach (var property in data.OfType<JProperty>())
             {
@@ -63,7 +65,7 @@ namespace BazaarBot.Engine
             foreach (var item in starts)
             {
                 var val = (int)item.Value;
-                var agent_class = _agent_classes[item.Name];
+                var agent_class = AgentClasses[item.Name];
                 var inv = agent_class.GetStartInventory();
                 var money = agent_class.money;
 
@@ -71,7 +73,7 @@ namespace BazaarBot.Engine
                 {
                     var a = new Agent(agent_index, item.Name, inv.Copy(), money);
                     a.init(this);
-                    list_agents.Add(a);
+                    Agents.Add(a);
                     agent_index++;
                 }
             }
@@ -79,7 +81,7 @@ namespace BazaarBot.Engine
 
         private void ParseAgents(JProperty property)
         {
-            _agent_classes = new Dictionary<string, AgentClass>();
+            AgentClasses = new Dictionary<string, AgentClass>();
             foreach (var a in property.First.Children())
             {
                 //a.inventory.size = { };
@@ -88,12 +90,12 @@ namespace BazaarBot.Engine
                 //    Reflect.setField(a.inventory.size, c.id, c.size);
                 //}
                 var ac = new AgentClass(a);
-                _agent_classes[ac.id] = ac;
-                _history_profit[ac.id] = new List<float>();
+                AgentClasses[ac.id] = ac;
+                _historyProfit[ac.id] = new List<float>();
             }
 
             //Make the agent list
-            list_agents = new List<Agent>();
+            Agents = new List<Agent>();
         }
 
         private void ParseCommodities(JProperty property)
@@ -115,8 +117,8 @@ namespace BazaarBot.Engine
                     }
                 }
 
-                list_commodities.Add(c.id);
-                _map_commodities[c.id] = new Commodity(c.id, c.size);
+                Commodities.Add(c.id);
+                _commodityMap[c.id] = new Commodity(c.id, c.size);
                 history_price[c.id] = new List<float>();
                 history_asks[c.id] = new List<float>();
                 history_bids[c.id] = new List<float>();
@@ -125,28 +127,28 @@ namespace BazaarBot.Engine
                 add_history_asks(c.id, 1);		//start history charts with 1 fake buy/sell bid
                 add_history_bids(c.id, 1);
                 add_history_trades(c.id, 1);
-                book_asks[c.id] = new List<Offer>();
-                book_bids[c.id] = new List<Offer>();
+                _bookAsks[c.id] = new List<Offer>();
+                _bookBids[c.id] = new List<Offer>();
             }
         }
 
     public void simulate(int rounds)
     {
 		for (int round = 0 ; round < rounds; round++) {
-			foreach (var agent in list_agents) {
+			foreach (var agent in Agents) {
 				agent.set_money_last(agent.Money);
 				
-				var ac = _agent_classes[agent.ClassId];				
+				var ac = AgentClasses[agent.ClassId];				
 				ac.logic.Perform(agent);
 								
-				foreach (var commodity in list_commodities) {
+				foreach (var commodity in Commodities) {
 					agent.generate_offers(this, commodity);
 				}
 			}
-			foreach (var commodity in list_commodities){
+			foreach (var commodity in Commodities){
 				resolve_offers(commodity);
 			}
-			foreach (var agent in list_agents.ToList()) {
+			foreach (var agent in Agents.ToList()) {
 				if (agent.Money <= 0) {
 					replaceAgent(agent);
 				}
@@ -154,159 +156,92 @@ namespace BazaarBot.Engine
 		}
 	}
 
-        public void ask(Offer offer)
+    public void ask(Offer offer)
+    {
+        _bookAsks[offer.Commodity].Add(offer);
+    }
+
+    public void bid(Offer offer)
+    {
+        _bookBids[offer.Commodity].Add(offer);
+    }
+
+    /**
+        * Returns the historical mean price of the given commodity over the last X rounds
+        * @param	commodity_ string id of commodity
+        * @param	range number of rounds to look back
+        * @return
+        */
+
+    public float get_history_price_avg(string commodity, int range)
+    {
+        var list = history_price[commodity];
+        return avg_list_f(list, range);
+    }
+
+    /**
+        * Returns the historical profitability for the given agent class over the last X rounds
+        * @param	class_ string id of agent class
+        * @param	range number of rounds to look back
+        * @return
+        */
+
+    public float get_history_profit_avg(string class_, int range)
+    {
+        var list = _historyProfit[class_];
+        return avg_list_f(list, range);
+    }
+
+    /**
+        * Returns the historical mean # of asks (sell offers) per round of the given commodity over the last X rounds
+        * @param	commodity_ string id of commodity
+        * @param	range number of rounds to look back
+        * @return
+        */
+
+    public float get_history_asks_avg(string commodity_, int range)
+    {
+        var list = history_asks[commodity_];
+        return avg_list_f(list, range);
+    }
+
+    /**
+        * Returns the historical mean # of bids (buy offers) per round of the given commodity over the last X rounds
+        * @param	commodity_ string id of commodity
+        * @param	range number of rounds to look back
+        * @return
+        */
+
+    public float get_history_bids_avg(string commodity_, int range)
+    {
+        var list = history_bids[commodity_];
+        return avg_list_f(list, range);
+    }
+
+    public float get_history_trades_avg(string commodity_, int range)
+    {
+        var list = history_trades[commodity_];
+        return avg_list_f(list, range);
+    }
+
+    public List<string> get_commodities_unsafe()
+    {
+        return Commodities;
+    }
+
+    public Commodity get_commodity_entry(string str)
+    {
+        if (_commodityMap.ContainsKey(str))
         {
-            book_asks[offer.Commodity].Add(offer);
+            return _commodityMap[str].Copy();
         }
-
-        public void bid(Offer offer)
-        {
-            book_bids[offer.Commodity].Add(offer);
-        }
-
-        /**
-         * Returns the historical mean price of the given commodity over the last X rounds
-         * @param	commodity_ string id of commodity
-         * @param	range number of rounds to look back
-         * @return
-         */
-
-        public float get_history_price_avg(string commodity, int range)
-        {
-            var list = history_price[commodity];
-            return avg_list_f(list, range);
-        }
-
-        /**
-         * Returns the historical profitability for the given agent class over the last X rounds
-         * @param	class_ string id of agent class
-         * @param	range number of rounds to look back
-         * @return
-         */
-
-        public float get_history_profit_avg(string class_, int range)
-        {
-            var list = _history_profit[class_];
-            return avg_list_f(list, range);
-        }
-
-        /**
-         * Returns the historical mean # of asks (sell offers) per round of the given commodity over the last X rounds
-         * @param	commodity_ string id of commodity
-         * @param	range number of rounds to look back
-         * @return
-         */
-
-        public float get_history_asks_avg(string commodity_, int range)
-        {
-            var list = history_asks[commodity_];
-            return avg_list_f(list, range);
-        }
-
-        /**
-         * Returns the historical mean # of bids (buy offers) per round of the given commodity over the last X rounds
-         * @param	commodity_ string id of commodity
-         * @param	range number of rounds to look back
-         * @return
-         */
-
-        public float get_history_bids_avg(string commodity_, int range)
-        {
-            var list = history_bids[commodity_];
-            return avg_list_f(list, range);
-        }
-
-        public float get_history_trades_avg(string commodity_, int range)
-        {
-            var list = history_trades[commodity_];
-            return avg_list_f(list, range);
-        }
-
-        public List<string> get_commodities_unsafe()
-        {
-            return list_commodities;
-        }
-
-        public Commodity get_commodity_entry(string str)
-        {
-            if (_map_commodities.ContainsKey(str))
-            {
-                return _map_commodities[str].Copy();
-            }
-            return null;
-        }
-
-        /********REPORT**********/
-        public MarketReport get_marketReport(int rounds) {
-		var mr = new MarketReport();
-        var pad = 10;
-		mr.str_list_commodity = "Stuff".PadRight(pad);
-        mr.str_list_commodity_prices = "Price".PadRight(pad);
-        mr.str_list_commodity_trades = "Trades".PadRight(pad);
-        mr.str_list_commodity_asks = "Supply".PadRight(pad);
-        mr.str_list_commodity_bids = "Demand".PadRight(pad);
-		
-		mr.str_list_agent = "Classes";
-		mr.str_list_agent_count = "Count";
-		mr.str_list_agent_profit = "Profit";
-		mr.str_list_agent_money = "Money";
-			
-		foreach (var commodity in list_commodities) {
-            mr.str_list_commodity += commodity.PadRight(pad);
-			
-			var price = get_history_price_avg(commodity, rounds);			
-			mr.str_list_commodity_prices += price.ToString("N2").PadRight(pad);
-			
-			var asks = get_history_asks_avg(commodity, rounds);
-            mr.str_list_commodity_asks += asks.ToString().PadRight(pad);
-			
-			var bids = get_history_bids_avg(commodity, rounds);
-            mr.str_list_commodity_bids += bids.ToString().PadRight(pad);
-						
-			var trades = get_history_trades_avg(commodity, rounds);
-            mr.str_list_commodity_trades += trades.ToString().PadRight(pad);
-			
-			mr.arr_str_list_inventory.Add(commodity);
-		}	
-		foreach (var key in _agent_classes.Keys) {
-			var inventory = new List<float>();		
-			foreach (var str in list_commodities) {
-				inventory.Add(0);		
-			}
-			mr.str_list_agent += key + "\n";
-			var profit = get_history_profit_avg(key, rounds);
-            mr.str_list_agent_profit += profit.ToString("N2") + "\n";
-			
-			float test_profit;
-			var list = list_agents.Where(p => p.ClassId == key);
-			var count = list.Count();
-			float money = 0;
-			
-			foreach (var a in list) {
-				money += a.Money;
-				for (int lic = 0; lic < list_commodities.Count;lic++)
-                {
-					inventory[lic] += a.QueryInventory(list_commodities[lic]);
-				}
-			}		
-						
-			money /= list.Count();
-            for (int lic = 0; lic < list_commodities.Count; lic++) 
-            {
-				inventory[lic] /= list.Count();
-                mr.arr_str_list_inventory[lic] += inventory[lic].ToString("N1") + "\n";
-			}
-			
-			mr.str_list_agent_count += count.ToString("N0") + "\n";
-			mr.str_list_agent_money += money.ToString("N0") + "\n";
-		}
-		return mr;
-	}
+        return null;
+    }
 
     private void resolve_offers(string commodity_ = "")
     {
-		var bids = book_bids[commodity_];
-		var asks = book_asks[commodity_];		
+		var bids = _bookBids[commodity_];
+		var asks = _bookAsks[commodity_];		
 		
 		//shuffle the books
 		shuffle(bids);
@@ -351,8 +286,8 @@ namespace BazaarBot.Engine
 				transfer_money(quantity_traded * clearing_price, seller.AgentId, buyer.AgentId);
 									
 				//update agent price beliefs based on successful transaction
-				var buyer_a  = list_agents[buyer.AgentId];
-				var seller_a = list_agents[seller.AgentId];
+				var buyer_a  = Agents[buyer.AgentId];
+				var seller_a = Agents[seller.AgentId];
 				buyer_a.update_price_model(this, "buy", commodity_, true, clearing_price);
 				seller_a.update_price_model(this, "sell", commodity_, true, clearing_price);
 				
@@ -382,13 +317,13 @@ namespace BazaarBot.Engine
 		//update price belief models based on unsuccessful transaction
 		while(bids.Count > 0){
 			var buyer = bids[0];
-			var buyer_a = list_agents[buyer.AgentId];
+			var buyer_a = Agents[buyer.AgentId];
 			buyer_a.update_price_model(this,"buy",commodity_, false);
             bids.Remove(bids[0]);
 		}
 		while(asks.Count > 0){
 			var seller = asks[0];
-			var seller_a = list_agents[seller.AgentId];
+			var seller_a = Agents[seller.AgentId];
 			seller_a.update_price_model(this,"sell",commodity_, false);
             asks.Remove(asks[0]);
 		}
@@ -408,14 +343,13 @@ namespace BazaarBot.Engine
 			avg_price = get_history_price_avg(commodity_,1);
 		}		
 		
-		list_agents.Sort(sort_agent_alpha);
+		Agents.Sort(sort_agent_alpha);
 		var curr_class = "";
 		var last_class = "";
         List<float> list = null;                                                                                    
-		var avg_profit = 0f;		
 		
-		for (int i=0;i < list_agents.Count;i++) {
-			var a = list_agents[i];		//get current agent
+        for (int i=0;i < Agents.Count;i++) {
+			var a = Agents[i];		//get current agent
 			curr_class = a.ClassId;			//check its class
 			if (curr_class != last_class) {		//new class?
 				if (list != null) {				//do we have a list built up?
@@ -431,7 +365,7 @@ namespace BazaarBot.Engine
 		add_history_profit(last_class, list_avg_f(list));
 		
 		//sort by id so everything works again
-		list_agents.Sort(sort_agent_id);
+		Agents.Sort(sort_agent_id);
 		
 	}
 
@@ -463,10 +397,10 @@ namespace BazaarBot.Engine
                 }
             }
 
-            var agent_class = _agent_classes[best_id];
+            var agent_class = AgentClasses[best_id];
             var new_agent = new Agent(agent.Id, best_id, agent_class.GetStartInventory(), agent_class.money);
             new_agent.init(this);
-            list_agents[agent.Id] = new_agent;
+            Agents[agent.Id] = new_agent;
             agent.Destroyed = true;
         }
 
@@ -474,9 +408,9 @@ namespace BazaarBot.Engine
         {
             float best_amount = 0;
             var best_class = "";
-            foreach (var key in _agent_classes.Keys)
+            foreach (var key in AgentClasses.Keys)
             {
-                var ac = _agent_classes[key];
+                var ac = AgentClasses[key];
                 var amount = ac.logic.GetProduction(commodity_);
                 if (amount > best_amount)
                 {
@@ -492,7 +426,7 @@ namespace BazaarBot.Engine
             var amount = 0f;
             var best_amount = 0f;
             var best_class = "";
-            foreach (var key in _agent_classes.Keys)
+            foreach (var key in AgentClasses.Keys)
             {
                 amount = get_avg_inventory(key, commodity_);
                 if (amount > best_amount)
@@ -506,7 +440,7 @@ namespace BazaarBot.Engine
 
         private float get_avg_inventory(string agent_id, string commodity_)
         {
-            var list = list_agents.Where(p => p.ClassId == agent_id);
+            var list = Agents.Where(p => p.ClassId == agent_id);
             var amount = 0f;
             foreach (var agent in list)
             {
@@ -527,7 +461,7 @@ namespace BazaarBot.Engine
         {
             var best_market = "";
             var best_ratio = -999999f;
-            foreach (var commodity in list_commodities)
+            foreach (var commodity in Commodities)
             {
                 var asks = get_history_asks_avg(commodity, range);
                 var bids = get_history_bids_avg(commodity, range);
@@ -551,10 +485,9 @@ namespace BazaarBot.Engine
 
         private string most_profitable_agent_class(int range = 10)
         {
-            List<float> list;
             var best = -99999f;
             var best_id = "";
-            foreach (var ac_id in _agent_classes.Keys)
+            foreach (var ac_id in AgentClasses.Keys)
             {
                 var val = get_history_profit_avg(ac_id, range);
                 if (val > best)
@@ -568,7 +501,7 @@ namespace BazaarBot.Engine
 
         private AgentClass get_agent_class(string str)
         {
-            foreach (var ac in _agent_classes.Values)
+            foreach (var ac in AgentClasses.Values)
             {
                 if (ac.id== str)
                     return ac;
@@ -578,7 +511,7 @@ namespace BazaarBot.Engine
 
         private void add_history_profit(string agent_class_, float f)
         {
-            var list = _history_profit[agent_class_];
+            var list = _historyProfit[agent_class_];
             list.Add(f);
         }
 
@@ -608,16 +541,16 @@ namespace BazaarBot.Engine
 
         private void transfer_commodity(string commodity_, float units_, int seller_id, int buyer_id)
         {
-            var seller = list_agents[seller_id];
-            var buyer = list_agents[buyer_id];
+            var seller = Agents[seller_id];
+            var buyer = Agents[buyer_id];
             seller.ChangeInventory(commodity_, -units_);
             buyer.ChangeInventory(commodity_, units_);
         }
 
         private void transfer_money(float amount_, int seller_id, int buyer_id)
         {
-            var seller = list_agents[seller_id];
-            var buyer = list_agents[buyer_id];
+            var seller = Agents[seller_id];
+            var buyer = Agents[buyer_id];
             seller.Money += amount_;
             buyer.Money -= amount_;
         }

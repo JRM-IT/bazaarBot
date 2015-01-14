@@ -16,12 +16,10 @@ namespace BazaarBot.Engine
 
         public static float MIN_PRICE = 0.01f;		//lowest possible price
 
-        private float _money_last; 	//money I had last round
+        private float _moneyLastRound;
         private Dictionary<string, Point> _priceBeliefs;
         private Dictionary<string, List<float>> _observedTradingRange;
-        private float _profit;	//profit from last round
         private int _lookback = 15;
-        private bool _destroyed;
 
         public Agent(int id, string classId, Inventory inventory, float money)
         {
@@ -224,18 +222,18 @@ namespace BazaarBot.Engine
 
         public float get_money_last()
         {
-            return _money_last;
+            return _moneyLastRound;
         }
 
         public float set_money_last(float f)
         {
-            _money_last = f;
-            return _money_last;
+            _moneyLastRound = f;
+            return _moneyLastRound;
         }
 
         public float get_profit()
         {
-            return Money - _money_last;
+            return Money - _moneyLastRound;
         }
 
         private float determine_price_of(string commodity_)
