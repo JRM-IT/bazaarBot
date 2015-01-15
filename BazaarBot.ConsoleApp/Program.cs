@@ -10,8 +10,10 @@ namespace BazaarBot.ConsoleApp
     class Program
     {
         const int BENCHMARK_ROUND_COUNT = 30;
+        const int SEED = 0;
 
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(0);
+        static Engine.BazaarBot bazaar = new Engine.BazaarBot(SEED);
+        
         static void Main(string[] args)
         {
             bazaar.LoadJsonSettings("settings.json");
