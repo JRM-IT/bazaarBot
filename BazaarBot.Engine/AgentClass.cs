@@ -9,14 +9,13 @@ namespace BazaarBot.Engine
     {
         public string id;
         public int money;
-
+        public AgentLogic logic;
+        
         Dictionary<string, float> _ideal;
         Dictionary<string, float> _start;
         Dictionary<string, float> _size;
+        float _maxInventorySize;
         
-        public float max_inventory_size;
-        public AgentLogic logic;
-
         public AgentClass(JToken data)
         {
             _ideal = new Dictionary<string, float>();
@@ -35,42 +34,41 @@ namespace BazaarBot.Engine
                                 break;
                             }
                         case ("money"):
-                                {
-                                    money = (int)property.Value;
-                                    break;
-                                }
+                            {
+                                money = (int)property.Value;
+                                break;
+                            }
                         case ("inventory"):
+                            {
+                                foreach (var child in property.Children().First().Children<JProperty>())
                                 {
-                                    foreach (var child in property.Children().First().Children<JProperty>())
+                                    switch (child.Name)
                                     {
-                                        switch (child.Name)
-                                        {
-                                            case ("start"):
-                                                {
-                                                    Populate(child, _start);
-                                                    break;
-                                                }
-                                            case ("ideal"):
-                                                {
-                                                    Populate(child, _ideal);
-                                                    break;
-                                                }
-                                            case ("max_size"):
-                                                {
-                                                    max_inventory_size = (int)child.Value;
-                                                    break;
-                                                }
-                                            default: throw new Exception("Unknown property: " + child.Name);
-                                        }
+                                        case ("start"):
+                                            {
+                                                Populate(child, _start);
+                                                break;
+                                            }
+                                        case ("ideal"):
+                                            {
+                                                Populate(child, _ideal);
+                                                break;
+                                            }
+                                        case ("max_size"):
+                                            {
+                                                _maxInventorySize = (int)child.Value;
+                                                break;
+                                            }
+                                        default: throw new Exception("Unknown property: " + child.Name);
                                     }
-                                    break;
                                 }
+                                break;
+                            }
                         case ("logic"):
-                                {
-                                    logic = new AgentLogic(property.Value);
-                                    break;
-                                }
-                        
+                            {
+                                logic = new AgentLogic(property.Value);
+                                break;
+                            }
                         default: throw new Exception("Unknown property: " + property.Name);
                     }
                 }
@@ -90,8 +88,8 @@ namespace BazaarBot.Engine
             var i = new Inventory();
             i.ideal = new Dictionary<string, float>(_ideal);
             i.stuff = new Dictionary<string, float>(_start);
-            i.sizes = new Dictionary<string, float>(_size);
-            i.max_size = max_inventory_size;
+            i.sizes = new Dictionary<string, float>(_size); // is never populated, will always be empty
+            i.max_size = _maxInventorySize;
             return i;
         }
 
