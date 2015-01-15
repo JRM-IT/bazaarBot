@@ -38,7 +38,7 @@ namespace BazaarBot.Engine
             {
                 var trades = new List<float>();
 
-                var price = bazaar.get_history_price_avg(str, _lookback);
+                var price = bazaar.GetPriceHistory(str, _lookback);
                 trades.Add(price * 0.5f);
                 trades.Add(price * 1.5f);	//push two fake trades to generate a range
 
@@ -98,7 +98,7 @@ namespace BazaarBot.Engine
                 observed_trades.Add(unit_price_);
             }
 
-            var public_mean_price = bazaar.get_history_price_avg(commodity_, 1);
+            var public_mean_price = bazaar.GetPriceHistory(commodity_, 1);
 
             var belief = price_belief(commodity_);
             var mean = (belief.X + belief.Y) / 2;
@@ -148,7 +148,7 @@ namespace BazaarBot.Engine
                 {
                     //Don't know what else to do? Check supply vs. demand
                     var asks = bazaar.get_history_asks_avg(commodity_, 1);
-                    var bids = bazaar.get_history_bids_avg(commodity_, 1);
+                    var bids = bazaar.GetBidHistory(commodity_, 1);
 
                     //supply_vs_demand: 0=balance, 1=all supply, -1=all demand
                     var supply_vs_demand = (asks - bids) / (asks + bids);
@@ -244,7 +244,7 @@ namespace BazaarBot.Engine
 
         private float determine_sale_quantity(BazaarBot bazaar, string commodity_)
         {
-            var mean = bazaar.get_history_price_avg(commodity_, _lookback);
+            var mean = bazaar.GetPriceHistory(commodity_, _lookback);
             var trading_range = observe_trading_range(commodity_);
             if (trading_range != null)
             {
@@ -262,7 +262,7 @@ namespace BazaarBot.Engine
 
         private float determine_purchase_quantity(BazaarBot bazaar, string commodity_)
         {
-            var mean = bazaar.get_history_price_avg(commodity_, _lookback);
+            var mean = bazaar.GetPriceHistory(commodity_, _lookback);
             var trading_range = observe_trading_range(commodity_);
             if (trading_range != null)
             {

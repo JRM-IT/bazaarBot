@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -5,88 +6,99 @@ namespace BazaarBot.Engine
 {
     public class MarketReport
     {
-        List<string> _commodities = new List<string> { "Stuff" };
+        List<string> _commodities = new List<string> { "" };
         List<string> _commodityPrices = new List<string> { "Price" };
         List<string> _commodityTrades = new List<string> { "Trades" };
         List<string> _commodityAsks = new List<string> { "Supply" };
         List<string> _commodityBids = new List<string> { "Demand" };
-        List<string> _agents = new List<string> { "Classes" };
+        List<string> _agents = new List<string> { "" };
         List<string> _agentCount = new List<string> { "Count" };
         List<string> _agentMoney = new List<string> { "Profit" };
         List<string> _agentProfit = new List<string> { "Money" };
 
-        public List<string> _inventory = new List<string>();
+        public List<float> _inventory = new List<float>();
 
         public MarketReport(BazaarBot bazaar)
         {
             var rounds = 1;
-            foreach (var commodity in bazaar.Commodities)
+            foreach (var commodity in bazaar.CommodityClasses)
             {
                 _commodities.Add(commodity);
-                _commodityPrices.Add(bazaar.get_history_price_avg(commodity, rounds).ToString("N2"));
+                _commodityPrices.Add(bazaar.GetPriceHistory(commodity, rounds).ToString("N2"));
                 _commodityAsks.Add(bazaar.get_history_asks_avg(commodity, rounds).ToString());
-                _commodityBids.Add(bazaar.get_history_bids_avg(commodity, rounds).ToString());
-                _commodityTrades.Add(bazaar.get_history_trades_avg(commodity, rounds).ToString());
+                _commodityBids.Add(bazaar.GetBidHistory(commodity, rounds).ToString());
+                _commodityTrades.Add(bazaar.GetTradeHistory(commodity, rounds).ToString());
             }
 
-            foreach (var key in bazaar.AgentClasses.Keys)
+            foreach (var agentKey in bazaar.AgentClasses.Keys)
             {
-                var inventory = new List<float>();
-                foreach (var str in bazaar.Commodities)
-                {
-                    inventory.Add(0);
-                }
-                _agents.Add(key);
-                var profit = bazaar.get_history_profit_avg(key, rounds);
-                _agentProfit.Add(profit.ToString("N2"));
+                _agents.Add(agentKey);
+                _agentProfit.Add(bazaar.GetProfitHistory(agentKey, rounds).ToString("N2"));
 
-                var agents = bazaar.Agents.Where(p => p.ClassId == key);
-                float money = 0;
+                var agents = bazaar.Agents.Where(p => p.ClassId == agentKey);
+                
+                _agentCount.Add(agents.Count().ToString("N0"));
+                _agentMoney.Add(BazaarBot.Average(agents.Select(p => p.Money)).ToString("N0"));
 
+
+                var inventory = Enumerable.Repeat(0f, bazaar.CommodityClasses.Count).ToArray();
                 foreach (var a in agents)
                 {
-                    money += a.Money;
-                    for (int i = 0; i < bazaar.Commodities.Count; i++)
+                    for (int i = 0; i < bazaar.CommodityClasses.Count; i++)
                     {
-                        inventory[i] += a.QueryInventory(bazaar.Commodities[i]);
+                        inventory[i] += a.QueryInventory(bazaar.CommodityClasses[i]);
                     }
                 }
-
-                money /= agents.Count();
-                for (int i = 0; i < bazaar.Commodities.Count; i++)
-                {
-                    inventory[i] /= agents.Count();
-                    _inventory.Add(inventory[i].ToString("N1"));
-                }
-
-                _agentCount.Add(agents.Count().ToString("N0"));
-                _agentMoney.Add(money.ToString("N0"));
+                _inventory.AddRange(inventory.Select(p => (p > 0 ? p / agents.Count() : 0)));
+                
             }
 
         }
 
+        int _commodityPadding;
+        int _agentPadding;
+
         public override string ToString()
         {
-            var pad = _commodities.Union(_commodityPrices).Union(_commodityTrades).Union(_commodityAsks).Union(_commodityBids).Max(p => p.Length) + 1;
+            _commodityPadding = _commodities.Union(_commodityPrices).Union(_commodityTrades).Union(_commodityAsks).Union(_commodityBids).Max(p => p.Length) + 1;
             
             var result = string.Join("\n", 
-                string.Join("",_commodities.Select(p => p.PadRight(pad))),
-                string.Join("",_commodityPrices.Select(p => p.PadRight(pad))),
-                string.Join("",_commodityTrades.Select(p => p.PadRight(pad))),
-                string.Join("",_commodityAsks.Select(p => p.PadRight(pad))),
-                string.Join("",_commodityBids.Select(p => p.PadRight(pad))));
+                string.Join("",_commodities.Select(p => p.PadRight(_commodityPadding))),
+                string.Join("",_commodityPrices.Select(p => p.PadRight(_commodityPadding))),
+                string.Join("",_commodityTrades.Select(p => p.PadRight(_commodityPadding))),
+                string.Join("",_commodityAsks.Select(p => p.PadRight(_commodityPadding))),
+                string.Join("",_commodityBids.Select(p => p.PadRight(_commodityPadding))));
+
+            result += "\n\n";
+
+            _agentPadding = _agents.Union(_agentCount).Union(_agentMoney).Union(_agentProfit).Max(p => p.Length) + 1;
+
+            result += string.Join("\n",
+                string.Join("", _agents.Select(p => p.PadRight(_agentPadding))),
+                string.Join("", _agentCount.Select(p => p.PadRight(_agentPadding))),
+                string.Join("", _agentMoney.Select(p => p.PadRight(_agentPadding))),
+                string.Join("", _agentProfit.Select(p => p.PadRight(_agentPadding))));
+
+            result += "\n\n";
+
+            result += string.Join("\n", GetInventory());
 
             result += "\n";
 
-            pad = _agents.Union(_agentCount).Union(_agentMoney).Union(_agentProfit).Max(p => p.Length) + 1;
-
-            result += string.Join("\n",
-                string.Join("", _agents.Select(p => p.PadRight(pad))),
-                string.Join("", _agentCount.Select(p => p.PadRight(pad))),
-                string.Join("", _agentMoney.Select(p => p.PadRight(pad))),
-                string.Join("", _agentProfit.Select(p => p.PadRight(pad))));
-
             return result;
+        }
+
+        private IEnumerable<string> GetInventory()
+        {
+            var pad = Math.Max(_commodityPadding, _agentPadding );
+            yield return new string(' ', pad) +  string.Join("", _commodities.Skip(1).Select(p => p.PadRight(pad)));
+
+            // -1s are in here to ignore the heading that is placed in each string array
+            for (int i=0;i<_agents.Count-1;i++)
+            {
+                var result = _inventory.Skip(i*(_commodities.Count-1)).Take(_commodities.Count-1).Select(p => p.ToString("N2").PadRight(pad));
+                yield return _agents[i+1].PadRight(pad) +  string.Join("", result);
+            }
         }
     }
 }

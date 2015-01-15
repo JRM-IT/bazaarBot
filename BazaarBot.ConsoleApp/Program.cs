@@ -9,11 +9,17 @@ namespace BazaarBot.ConsoleApp
 {
     class Program
     {
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot();
+        static Engine.BazaarBot bazaar = new Engine.BazaarBot(0);
         static void Main(string[] args)
         {
             bazaar.LoadJsonSettings("settings.json");
-            var key = ConsoleKey.A;
+            Console.WriteLine(new MarketReport(bazaar));
+            MenuLoop();
+        }
+
+        private static void MenuLoop()
+        {
+            var key = default(ConsoleKey);
             while (key != ConsoleKey.Q)
             {
                 Console.WriteLine("(B)enchmark or (A)dvance");
@@ -35,7 +41,7 @@ namespace BazaarBot.ConsoleApp
             sw.Stop();
             var time = sw.ElapsedMilliseconds;
             var avg = (float)time / (float)benchmark / 1000f;
-            Console.WriteLine("Rounds: {0}, Commodities: {1}, Agents: {2}, Time: {3}, Avg Time: {4}\n", benchmark, bazaar.num_commodities, bazaar.num_agents, time, avg);
+            Console.WriteLine("Rounds: {0}, Commodities: {1}, Agents: {2}, Time: {3}, Avg Time: {4}\n", benchmark, bazaar.CommodityClasses.Count, bazaar.Agents.Count, time, avg);
         }
 
         private static void Advance()
