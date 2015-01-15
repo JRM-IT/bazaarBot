@@ -8,6 +8,8 @@ namespace BazaarBot.Engine
 {
     public class BazaarBot
     {
+        public int TotalRounds { get; private set; }
+
         public List<string> CommodityClasses { get; private set; }
         
         public Dictionary<string, AgentClass> AgentClasses { get; private set; }
@@ -122,6 +124,7 @@ namespace BazaarBot.Engine
         public void simulate(int rounds)
         {
 		    for (int round = 0 ; round < rounds; round++) {
+                TotalRounds++;
 			    foreach (var agent in Agents) {
 				    agent.set_money_last(agent.Money);
 				
@@ -141,6 +144,7 @@ namespace BazaarBot.Engine
 				    }
 			    }
 		    }
+
 	    }
 
         public void ask(Offer offer)
