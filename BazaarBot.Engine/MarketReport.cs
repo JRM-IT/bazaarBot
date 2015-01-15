@@ -24,16 +24,16 @@ namespace BazaarBot.Engine
             foreach (var commodity in bazaar.CommodityClasses)
             {
                 _commodities.Add(commodity);
-                _commodityPrices.Add(bazaar.GetPriceHistory(commodity, rounds).ToString("N2"));
-                _commodityAsks.Add(bazaar.get_history_asks_avg(commodity, rounds).ToString());
-                _commodityBids.Add(bazaar.GetBidHistory(commodity, rounds).ToString());
-                _commodityTrades.Add(bazaar.GetTradeHistory(commodity, rounds).ToString());
+                _commodityPrices.Add(bazaar.GetPriceAverage(commodity, rounds).ToString("N2"));
+                _commodityAsks.Add(bazaar.GetAskAverage(commodity, rounds).ToString());
+                _commodityBids.Add(bazaar.GetBidAverage(commodity, rounds).ToString());
+                _commodityTrades.Add(bazaar.GetTradeAverage(commodity, rounds).ToString());
             }
 
             foreach (var agentKey in bazaar.AgentClasses.Keys)
             {
                 _agents.Add(agentKey);
-                _agentProfit.Add(bazaar.GetProfitHistory(agentKey, rounds).ToString("N2"));
+                _agentProfit.Add(bazaar.GetProfitAverage(agentKey, rounds).ToString("N2"));
 
                 var agents = bazaar.Agents.Where(p => p.ClassId == agentKey);
                 

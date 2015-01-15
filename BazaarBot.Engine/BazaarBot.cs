@@ -9,16 +9,17 @@ namespace BazaarBot.Engine
     public class BazaarBot
     {
         public List<string> CommodityClasses { get; private set; }
+        
         public Dictionary<string, AgentClass> AgentClasses { get; private set; }
         public List<Agent> Agents { get; private set; }
-        Dictionary<string, List<Offer>> _bookBids = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<Offer>> _bookAsks = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<float>> _historyProfit = new Dictionary<string, List<float>>();
 
-        private Dictionary<string, List<float>> history_price = new Dictionary<string, List<float>>();	//avg clearing price per good over time
-        private Dictionary<string, List<float>> history_asks = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
-        private Dictionary<string, List<float>> history_bids = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
-        private Dictionary<string, List<float>> history_trades = new Dictionary<string,List<float>>();		//# units traded per good over time
+        Dictionary<string, List<Offer>> _bids = new Dictionary<string, List<Offer>>();
+        Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
+        Dictionary<string, List<float>> _profitHistory = new Dictionary<string, List<float>>();
+        Dictionary<string, List<float>> _priceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
+        Dictionary<string, List<float>> _askHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
+        Dictionary<string, List<float>> _bidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
+        Dictionary<string, List<float>> _tradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
 
         public BazaarBot(int seed)
         {
@@ -93,7 +94,7 @@ namespace BazaarBot.Engine
                 //}
                 var ac = new AgentClass(a);
                 AgentClasses[ac.id] = ac;
-                _historyProfit[ac.id] = new List<float>();
+                _profitHistory[ac.id] = new List<float>();
             }
 
             //Make the agent list
@@ -120,16 +121,16 @@ namespace BazaarBot.Engine
                 }
 
                 CommodityClasses.Add(c.id);
-                history_price[c.id] = new List<float>();
-                history_asks[c.id] = new List<float>();
-                history_bids[c.id] = new List<float>();
-                history_trades[c.id] = new List<float>();
-                add_history_price(c.id, 1);		//start the bidding at $1!
-                add_history_asks(c.id, 1);		//start history charts with 1 fake buy/sell bid
-                add_history_bids(c.id, 1);
-                add_history_trades(c.id, 1);
-                _bookAsks[c.id] = new List<Offer>();
-                _bookBids[c.id] = new List<Offer>();
+                _priceHistory[c.id] = new List<float>();
+                _askHistory[c.id] = new List<float>();
+                _bidHistory[c.id] = new List<float>();
+                _tradeHistory[c.id] = new List<float>();
+                _priceHistory[c.id].Add(1);    //start the bidding at $1!
+                _askHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
+                _bidHistory[c.id].Add(1);
+                _tradeHistory[c.id].Add(1);
+                _asks[c.id] = new List<Offer>();
+                _bids[c.id] = new List<Offer>();
             }
         }
 
@@ -159,41 +160,38 @@ namespace BazaarBot.Engine
 
         public void ask(Offer offer)
         {
-            _bookAsks[offer.Commodity].Add(offer);
+            _asks[offer.Commodity].Add(offer);
         }
 
         public void bid(Offer offer)
         {
-            _bookBids[offer.Commodity].Add(offer);
+            _bids[offer.Commodity].Add(offer);
         }
 
-        public float GetPriceHistory(string commodity, int range)
+        public float GetPriceAverage(string commodity, int range)
         {
-            var list = history_price[commodity];
+            return Average(_priceHistory[commodity], range);
+        }
+
+        public float GetProfitAverage(string commodity, int range)
+        {
+            var list = _profitHistory[commodity];
             return Average(list, range);
         }
 
-        public float GetProfitHistory(string className, int range)
+        public float GetAskAverage(string commodity, int range)
         {
-            var list = _historyProfit[className];
-            return Average(list, range);
+            return Average(_askHistory[commodity], range);
         }
 
-        public float get_history_asks_avg(string commodity, int range)
+        public float GetBidAverage(string commodity, int range)
         {
-            var list = history_asks[commodity];
-            return Average(list, range);
+            return Average(_bidHistory[commodity], range);
         }
 
-        public float GetBidHistory(string commodity, int range)
+        public float GetTradeAverage(string commodity, int range)
         {
-            var list = history_bids[commodity];
-            return Average(list, range);
-        }
-
-        public float GetTradeHistory(string commodity, int range)
-        {
-            var list = history_trades[commodity];
+            var list = _tradeHistory[commodity];
             return Average(list, range);
         }
 
@@ -204,8 +202,8 @@ namespace BazaarBot.Engine
 
         private void resolve_offers(string commodity = "")
         {
-		    var bids = _bookBids[commodity];
-		    var asks = _bookAsks[commodity];		
+		    var bids = _bids[commodity];
+		    var asks = _asks[commodity];		
 		
 		    //shuffle the books
 		    shuffle(bids);
@@ -293,18 +291,17 @@ namespace BazaarBot.Engine
 		    }
 		
 		    //update history		
-		
-		    add_history_asks(commodity, num_asks);
-		    add_history_bids(commodity, num_bids);
-		    add_history_trades(commodity, units_traded);		
+            _askHistory[commodity].Add(num_asks);
+		    _bidHistory[commodity].Add(num_bids);
+            _tradeHistory[commodity].Add(units_traded);
 		
 		    if(units_traded > 0){
 			    avg_price = money_traded / (float)units_traded;
-			    add_history_price(commodity, avg_price);		
+                _priceHistory[commodity].Add(avg_price);
 		    }else {
 			    //special case: none were traded this round, use last round's average price
-			    add_history_price(commodity, GetPriceHistory(commodity, 1));
-			    avg_price = GetPriceHistory(commodity,1);
+                _priceHistory[commodity].Add(GetPriceAverage(commodity, 1));
+			    avg_price = GetPriceAverage(commodity,1);
 		    }		
 		
 		    Agents.Sort(sort_agent_alpha);
@@ -319,7 +316,7 @@ namespace BazaarBot.Engine
                     if (list != null) //do we have a list built up?
                     {				
 					    //log last class' profit
-                        _historyProfit[last_class].Add(Average(list));
+                        _profitHistory[last_class].Add(Average(list));
 				    }
 				    list = new List<float>();		//make a new list
 				    last_class = curr_class;		
@@ -327,7 +324,7 @@ namespace BazaarBot.Engine
 			    list.Add(a.get_profit());			//push profit onto list
 		    }	
 		    //add the last class too
-            _historyProfit[last_class].Add(Average(list));
+            _profitHistory[last_class].Add(Average(list));
 		
 		    //sort by id so everything works again
 		    Agents.Sort(sort_agent_id);
@@ -417,8 +414,8 @@ namespace BazaarBot.Engine
             var best_ratio = -999999f;
             foreach (var commodity in CommodityClasses)
             {
-                var asks = get_history_asks_avg(commodity, range);
-                var bids = GetBidHistory(commodity, range);
+                var asks = GetAskAverage(commodity, range);
+                var bids = GetBidAverage(commodity, range);
                 var ratio = 0f;
                 if (asks == 0 && bids > 0)
                 {
@@ -443,7 +440,7 @@ namespace BazaarBot.Engine
             var best_id = "";
             foreach (var ac_id in AgentClasses.Keys)
             {
-                var val = GetProfitHistory(ac_id, range);
+                var val = GetProfitAverage(ac_id, range);
                 if (val > best)
                 {
                     best_id = ac_id;
@@ -461,30 +458,6 @@ namespace BazaarBot.Engine
                     return ac;
             }
             return null;
-        }
-
-        private void add_history_asks(string commodity_, float f)
-        {
-            var list = history_asks[commodity_];
-            list.Add(f);
-        }
-
-        private void add_history_bids(string commodity_, float f)
-        {
-            var list = history_bids[commodity_];
-            list.Add(f);
-        }
-
-        private void add_history_trades(string commodity_, float f)
-        {
-            var list = history_trades[commodity_];
-            list.Add(f);
-        }
-
-        private void add_history_price(string commodity_, float p)
-        {
-            var list = history_price[commodity_];
-            list.Add(p);
         }
 
         private void transfer_commodity(string commodity_, float units_, int seller_id, int buyer_id)
