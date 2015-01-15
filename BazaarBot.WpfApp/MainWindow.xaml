@@ -19,6 +19,6 @@
             <Button Command="{Binding BenchmarkCommand}">Benchmark</Button>
             <TextBox Text="{Binding BenchmarkRounds}" Width="50" />
         </StackPanel>
-            <oxy:PlotView Model="{Binding Model}" Grid.Row="1"/>
+            <oxy:PlotView Model="{Binding PricePlot}" Grid.Row="1"/>
         </Grid>
 </Window>

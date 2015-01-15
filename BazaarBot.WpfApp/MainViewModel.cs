@@ -32,17 +32,21 @@ namespace BazaarBot.WpfApp
 
         private void Plot()
         {
-            Model = new PlotModel { Title = "bazaarBot", PlotType = PlotType.XY };
+            PricePlot = GetPlot("Prices", bazaar.PriceHistory);
+            OnPropertyChanged("PricePlot");
+        }
+
+        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary)
+        {
+            var plot = new PlotModel { Title = title };
             foreach (var commodity in bazaar.CommodityClasses)
             {
-                var series = new LineSeries { Title = commodity + " price" };
-                
-                for (int i = 0; i < bazaar.PriceHistory[commodity].Count; i++)
-                    series.Points.Add(new DataPoint(i, bazaar.PriceHistory[commodity][i]));
-                
-                Model.Series.Add(series);
+                var series = new LineSeries { Title = commodity };
+                for (int i = 0; i < dictionary[commodity].Count; i++)
+                    series.Points.Add(new DataPoint(i, dictionary[commodity][i]));
+                plot.Series.Add(series);
             }
-            OnPropertyChanged("Model");
+            return plot;
         }
 
         private void Simulate(int rounds)
@@ -61,7 +65,7 @@ namespace BazaarBot.WpfApp
             Simulate(1);
         }
 
-        public PlotModel Model { get; private set; }
+        public PlotModel PricePlot { get; private set; }
 
         public int BenchmarkRounds { get; set; }
 
