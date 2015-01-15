@@ -37,10 +37,10 @@ namespace BazaarBot.ConsoleApp
 
         private static void Benchmark(int benchmark)
         {
-            Console.Clear();
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
             bazaar.simulate(benchmark);
+            Console.Clear();
             Console.WriteLine(new MarketReport(bazaar));
             sw.Stop();
             var time = sw.ElapsedMilliseconds;
