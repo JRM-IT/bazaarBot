@@ -18,11 +18,11 @@ namespace BazaarBot.Engine
         Dictionary<string, List<Offer>> _bids = new Dictionary<string, List<Offer>>();
         Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
         Dictionary<string, List<float>> _profitHistory = new Dictionary<string, List<float>>();
-        Dictionary<string, List<float>> _priceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
+        public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         Dictionary<string, List<float>> _askHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
         Dictionary<string, List<float>> _bidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
         Dictionary<string, List<float>> _tradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
-
+        
         public BazaarBot(int seed)
         {
             RNG.Seed(seed);
@@ -108,11 +108,11 @@ namespace BazaarBot.Engine
             foreach (var c in commodities)
             {
                 CommodityClasses.Add(c.id);
-                _priceHistory[c.id] = new List<float>();
+                PriceHistory[c.id] = new List<float>();
                 _askHistory[c.id] = new List<float>();
                 _bidHistory[c.id] = new List<float>();
                 _tradeHistory[c.id] = new List<float>();
-                _priceHistory[c.id].Add(1);    //start the bidding at $1!
+                PriceHistory[c.id].Add(1);    //start the bidding at $1!
                 _askHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
                 _bidHistory[c.id].Add(1);
                 _tradeHistory[c.id].Add(1);
@@ -159,7 +159,7 @@ namespace BazaarBot.Engine
 
         public float GetPriceAverage(string commodity, int range)
         {
-            return Average(_priceHistory[commodity], range);
+            return Average(PriceHistory[commodity], range);
         }
 
         public float GetProfitAverage(string commodity, int range)
@@ -286,10 +286,10 @@ namespace BazaarBot.Engine
 		
 		    if(units_traded > 0){
 			    avg_price = money_traded / (float)units_traded;
-                _priceHistory[commodity].Add(avg_price);
+                PriceHistory[commodity].Add(avg_price);
 		    }else {
 			    //special case: none were traded this round, use last round's average price
-                _priceHistory[commodity].Add(GetPriceAverage(commodity, 1));
+                PriceHistory[commodity].Add(GetPriceAverage(commodity, 1));
 			    avg_price = GetPriceAverage(commodity,1);
 		    }		
 		
