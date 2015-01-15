@@ -61,6 +61,7 @@ namespace BazaarBot.Engine
 
         private void ParseStartConditions(JProperty property)
         {
+            Agents = new List<Agent>();
             var agents = property.Children().SelectMany(p => p.Children<JProperty>()).First().First;
             var starts = agents.Children<JProperty>();
             var agent_index = 0;
@@ -92,13 +93,10 @@ namespace BazaarBot.Engine
                 //    var c = _map_commodities[key];
                 //    Reflect.setField(a.inventory.size, c.id, c.size);
                 //}
-                var ac = new AgentClass(a);
-                AgentClasses[ac.id] = ac;
-                _profitHistory[ac.id] = new List<float>();
+                var agentClass = new AgentClass(a);
+                AgentClasses[agentClass.id] = agentClass;
+                _profitHistory[agentClass.id] = new List<float>();
             }
-
-            //Make the agent list
-            Agents = new List<Agent>();
         }
 
         private void ParseCommodities(JProperty property)
