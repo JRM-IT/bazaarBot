@@ -22,7 +22,7 @@ namespace BazaarBot.ConsoleApp
             var key = default(ConsoleKey);
             while (key != ConsoleKey.Q)
             {
-                Console.WriteLine("(B)enchmark or (A)dvance");
+                Console.WriteLine("(B)enchmark, (A)dvance or (Q)uit");
                 key = Console.ReadKey(true).Key;
                 if (key == ConsoleKey.B)
                     Benchmark(30);
