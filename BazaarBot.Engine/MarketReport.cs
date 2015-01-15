@@ -13,8 +13,8 @@ namespace BazaarBot.Engine
         List<string> _commodityBids = new List<string> { "Demand" };
         List<string> _agents = new List<string> { "" };
         List<string> _agentCount = new List<string> { "Count" };
-        List<string> _agentMoney = new List<string> { "Profit" };
-        List<string> _agentProfit = new List<string> { "Money" };
+        List<string> _agentMoney = new List<string> { "Money" };
+        List<string> _agentProfit = new List<string> { "Profit" };
 
         public List<float> _inventory = new List<float>();
 
