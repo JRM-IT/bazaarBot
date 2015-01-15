@@ -9,7 +9,6 @@ namespace BazaarBot.Engine
     public class BazaarBot
     {
         public List<string> CommodityClasses { get; private set; }
-        Dictionary<string, Commodity> _commodityMap = new Dictionary<string, Commodity>();
         public Dictionary<string, AgentClass> AgentClasses { get; private set; }
         public List<Agent> Agents { get; private set; }
         Dictionary<string, List<Offer>> _bookBids = new Dictionary<string, List<Offer>>();
@@ -121,7 +120,6 @@ namespace BazaarBot.Engine
                 }
 
                 CommodityClasses.Add(c.id);
-                _commodityMap[c.id] = new Commodity(c.id, c.size);
                 history_price[c.id] = new List<float>();
                 history_asks[c.id] = new List<float>();
                 history_bids[c.id] = new List<float>();
@@ -202,15 +200,6 @@ namespace BazaarBot.Engine
         public List<string> get_commodities_unsafe()
         {
             return CommodityClasses;
-        }
-
-        public Commodity get_commodity_entry(string str)
-        {
-            if (_commodityMap.ContainsKey(str))
-            {
-                return _commodityMap[str].Copy();
-            }
-            return null;
         }
 
         private void resolve_offers(string commodity = "")
