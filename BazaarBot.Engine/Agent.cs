@@ -6,7 +6,7 @@ namespace BazaarBot.Engine
         public int Id { get; private set; }			//unique integer identifier
         public string ClassId { get; private set; }	//string identifier, "famer", "woodcutter", etc.
         public Inventory Inventory { get; private set; }
-        public float Money;
+        public float Money { get; set; }
         public bool Destroyed;
 
         public static float SIGNIFICANT = 0.25f;	//25% more or less is "significant"
@@ -215,9 +215,12 @@ namespace BazaarBot.Engine
         }
 
 
-        public void ChangeInventory(string commodity_, float delta_)
+        public void ChangeInventory(string commodity, float delta)
         {
-            Inventory.Change(commodity_, delta_);
+            if (commodity == "money")
+                Money += delta;
+            else
+                Inventory.Change(commodity, delta);
         }
 
         public float get_money_last()

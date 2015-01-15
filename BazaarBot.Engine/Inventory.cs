@@ -56,10 +56,14 @@ namespace BazaarBot.Engine
         {
             if (stuff.ContainsKey(commodity))
             {
-                var result = stuff[commodity] - delta;
-                if (result < 0) result = 0;
-                stuff[commodity] = result;
+                stuff[commodity] += delta;
+                if (stuff[commodity] < 0)
+                    stuff[commodity] = 0;
             }
+            else if (delta >= 0)
+                stuff[commodity] = delta;
+            else
+                throw new System.InvalidOperationException("Cannot remove non-existing commodity");
         }
 
         public float Surplus(string commodity)
