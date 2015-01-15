@@ -9,6 +9,8 @@ namespace BazaarBot.ConsoleApp
 {
     class Program
     {
+        const int BENCHMARK_ROUND_COUNT = 30;
+
         static Engine.BazaarBot bazaar = new Engine.BazaarBot(0);
         static void Main(string[] args)
         {
@@ -25,7 +27,7 @@ namespace BazaarBot.ConsoleApp
                 Console.WriteLine("Round {0:N0}, (B)enchmark, (A)dvance or (Q)uit", bazaar.TotalRounds);
                 key = Console.ReadKey(true).Key;
                 if (key == ConsoleKey.B)
-                    Benchmark(30);
+                    Benchmark(BENCHMARK_ROUND_COUNT);
                 else if (key == ConsoleKey.A)
                     Advance();
             }
