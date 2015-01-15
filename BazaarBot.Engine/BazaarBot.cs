@@ -103,23 +103,10 @@ namespace BazaarBot.Engine
 
         private void ParseCommodities(JProperty property)
         {
-            var children = property.Value.Children();
-            foreach (var item in children)
+            var commodities = property.Value.ToObject<Commodity[]>();
+            
+            foreach (var c in commodities)
             {
-                var c = new Commodity();
-                foreach (var j in item.Children<JProperty>())
-                {
-                    switch (j.Name)
-                    {
-                        case ("size"):
-                            c.size = (float)j.Value;
-                            break;
-                        case ("id"):
-                            c.id = (string)j.Value;
-                            break;
-                    }
-                }
-
                 CommodityClasses.Add(c.id);
                 _priceHistory[c.id] = new List<float>();
                 _askHistory[c.id] = new List<float>();
