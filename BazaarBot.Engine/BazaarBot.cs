@@ -19,9 +19,9 @@ namespace BazaarBot.Engine
         Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
         Dictionary<string, List<float>> _profitHistory = new Dictionary<string, List<float>>();
         public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
-        Dictionary<string, List<float>> _askHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
-        Dictionary<string, List<float>> _bidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
-        Dictionary<string, List<float>> _tradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
+        public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
+        public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
+        public Dictionary<string, List<float>> TradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
         
         public BazaarBot(int seed)
         {
@@ -109,13 +109,13 @@ namespace BazaarBot.Engine
             {
                 CommodityClasses.Add(c.id);
                 PriceHistory[c.id] = new List<float>();
-                _askHistory[c.id] = new List<float>();
-                _bidHistory[c.id] = new List<float>();
-                _tradeHistory[c.id] = new List<float>();
+                AskHistory[c.id] = new List<float>();
+                BidHistory[c.id] = new List<float>();
+                TradeHistory[c.id] = new List<float>();
                 PriceHistory[c.id].Add(1);    //start the bidding at $1!
-                _askHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
-                _bidHistory[c.id].Add(1);
-                _tradeHistory[c.id].Add(1);
+                AskHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
+                BidHistory[c.id].Add(1);
+                TradeHistory[c.id].Add(1);
                 _asks[c.id] = new List<Offer>();
                 _bids[c.id] = new List<Offer>();
             }
@@ -170,17 +170,17 @@ namespace BazaarBot.Engine
 
         public float GetAskAverage(string commodity, int range)
         {
-            return Average(_askHistory[commodity], range);
+            return Average(AskHistory[commodity], range);
         }
 
         public float GetBidAverage(string commodity, int range)
         {
-            return Average(_bidHistory[commodity], range);
+            return Average(BidHistory[commodity], range);
         }
 
         public float GetTradeAverage(string commodity, int range)
         {
-            var list = _tradeHistory[commodity];
+            var list = TradeHistory[commodity];
             return Average(list, range);
         }
 
@@ -280,9 +280,9 @@ namespace BazaarBot.Engine
 		    }
 		
 		    //update history		
-            _askHistory[commodity].Add(num_asks);
-		    _bidHistory[commodity].Add(num_bids);
-            _tradeHistory[commodity].Add(units_traded);
+            AskHistory[commodity].Add(num_asks);
+		    BidHistory[commodity].Add(num_bids);
+            TradeHistory[commodity].Add(units_traded);
 		
 		    if(units_traded > 0){
 			    avg_price = money_traded / (float)units_traded;

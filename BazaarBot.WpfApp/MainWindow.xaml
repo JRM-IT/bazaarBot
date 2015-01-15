@@ -9,16 +9,25 @@
     </Window.DataContext>
     
         
-        <Grid>
-            <Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
             <RowDefinition Height="25" />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal" Background="Gray">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Horizontal" Background="Gray" Grid.ColumnSpan="2">
             <Button Command="{Binding AdvanceCommand}">Advance</Button>
             <Button Command="{Binding BenchmarkCommand}">Benchmark</Button>
             <TextBox Text="{Binding BenchmarkRounds}" Width="50" />
         </StackPanel>
-            <oxy:PlotView Model="{Binding PricePlot}" Grid.Row="1"/>
-        </Grid>
+        <oxy:PlotView Model="{Binding PricePlot}" Grid.Row="1"/>
+        <oxy:PlotView Model="{Binding TradesPlot}" Grid.Row="1" Grid.Column="1"/>
+        <oxy:PlotView Model="{Binding SupplyPlot}" Grid.Row="2"/>
+        <oxy:PlotView Model="{Binding DemandPlot}" Grid.Row="2" Grid.Column="1"/>
+    </Grid>
 </Window>

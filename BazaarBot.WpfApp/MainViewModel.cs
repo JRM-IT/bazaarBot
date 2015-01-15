@@ -15,11 +15,15 @@ namespace BazaarBot.WpfApp
     class MainViewModel : INotifyPropertyChanged
     {
         const int SEED = 0;
+        static Engine.BazaarBot bazaar = new Engine.BazaarBot(SEED);
 
         public ICommand AdvanceCommand { get; set; }
         public ICommand BenchmarkCommand { get; set; }
-
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(SEED);
+        public PlotModel PricePlot { get; private set; }
+        public PlotModel TradesPlot { get; private set; }
+        public PlotModel SupplyPlot { get; private set; }
+        public PlotModel DemandPlot { get; private set; }
+        public int BenchmarkRounds { get; set; }
 
         public MainViewModel()
         {
@@ -33,7 +37,13 @@ namespace BazaarBot.WpfApp
         private void Plot()
         {
             PricePlot = GetPlot("Prices", bazaar.PriceHistory);
+            DemandPlot = GetPlot("Demand", bazaar.BidHistory);
+            SupplyPlot = GetPlot("Supply", bazaar.AskHistory);
+            TradesPlot = GetPlot("Trades", bazaar.TradeHistory);
             OnPropertyChanged("PricePlot");
+            OnPropertyChanged("SupplyPlot");
+            OnPropertyChanged("DemandPlot");
+            OnPropertyChanged("TradesPlot");
         }
 
         private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary)
@@ -64,10 +74,6 @@ namespace BazaarBot.WpfApp
         {
             Simulate(1);
         }
-
-        public PlotModel PricePlot { get; private set; }
-
-        public int BenchmarkRounds { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
