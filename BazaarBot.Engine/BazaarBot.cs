@@ -221,26 +221,26 @@ namespace BazaarBot.Engine
 			    var buyer = bids[0];
 			    var seller = asks[0];
 			
-			    var quantity_traded = Math.Min(seller.Units, buyer.Units);
-			    var clearing_price = avgf(seller.UnitPrice, buyer.UnitPrice);
+			    var quantityTraded = Math.Min(seller.Units, buyer.Units);
+			    var clearingPrice = avgf(seller.UnitPrice, buyer.UnitPrice);
 						
-			    if (quantity_traded > 0) {
+			    if (quantityTraded > 0) {
 				    //transfer the goods for the agreed price
-				    seller.Units -= quantity_traded;
-				    buyer.Units -= quantity_traded;
+                    seller.Trade(quantityTraded);
+                    buyer.Trade(quantityTraded);
 							
-				    transfer_commodity(commodity, quantity_traded, seller.AgentId, buyer.AgentId);
-				    transfer_money(quantity_traded * clearing_price, seller.AgentId, buyer.AgentId);
+				    transfer_commodity(commodity, quantityTraded, seller.AgentId, buyer.AgentId);
+				    transfer_money(quantityTraded * clearingPrice, seller.AgentId, buyer.AgentId);
 									
 				    //update agent price beliefs based on successful transaction
 				    var buyer_a  = Agents[buyer.AgentId];
 				    var seller_a = Agents[seller.AgentId];
-				    buyer_a.update_price_model(this, "buy", commodity, true, clearing_price);
-				    seller_a.update_price_model(this, "sell", commodity, true, clearing_price);
+				    buyer_a.update_price_model(this, "buy", commodity, true, clearingPrice);
+				    seller_a.update_price_model(this, "sell", commodity, true, clearingPrice);
 				
 				    //log the stats
-				    money_traded += (quantity_traded * clearing_price);
-				    units_traded += quantity_traded;
+				    money_traded += (quantityTraded * clearingPrice);
+				    units_traded += quantityTraded;
 				    successful_trades++;							
 			    }
 						
