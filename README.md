@@ -3,6 +3,10 @@ bazaarBot (.NET)
 
 This is a C# port of the original [bazaarBot](https://github.com/larsiusprime/bazaarBot).
 
+<a href="https://ci.appveyor.com/project/staff0rd/bazaarbot">
+	<img src="https://ci.appveyor.com/api/projects/status/mb3r4b0ecstruo7m?svg=true" alt="Build status">
+</a>
+
 bazaarBot
 ---------
 
