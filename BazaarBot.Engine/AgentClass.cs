@@ -9,24 +9,19 @@ namespace BazaarBot.Engine
     {
         public string id;
         public int money;
-        public List<string> inventory_ideal_ids;
-        public List<float> inventory_ideal_amounts;
-        public List<string> inventory_start_ids;
-        public List<float> inventory_start_amounts;
-        public List<string> inventory_size_ids;
-        public List<float> inventory_size_amounts;
 
+        Dictionary<string, float> _ideal;
+        Dictionary<string, float> _start;
+        Dictionary<string, float> _size;
+        
         public float max_inventory_size;
         public AgentLogic logic;
 
         public AgentClass(JToken data)
         {
-            inventory_ideal_ids = new List<string>();
-            inventory_ideal_amounts = new List<float>();
-            inventory_start_ids = new List<string>();
-            inventory_start_amounts = new List<float>();
-            inventory_size_ids = new List<string>();
-            inventory_size_amounts = new List<float>();
+            _ideal = new Dictionary<string, float>();
+            _start = new Dictionary<string, float>();
+            _size = new Dictionary<string, float>();
 
             if (data != null)
             {
@@ -52,12 +47,12 @@ namespace BazaarBot.Engine
                                         {
                                             case ("start"):
                                                 {
-                                                    Populate(child, inventory_start_ids, inventory_start_amounts);
+                                                    Populate(child, _start);
                                                     break;
                                                 }
                                             case ("ideal"):
                                                 {
-                                                    Populate(child, inventory_ideal_ids, inventory_ideal_amounts);
+                                                    Populate(child, _ideal);
                                                     break;
                                                 }
                                             case ("max_size"):
@@ -79,25 +74,23 @@ namespace BazaarBot.Engine
                         default: throw new Exception("Unknown property: " + property.Name);
                     }
                 }
-
             }
         }
 
-        private static void Populate(JProperty child, List<string> ids, List<float> amounts)
+        private static void Populate(JProperty child, Dictionary<string,float> dictionary)
         {
             foreach (var item in child.Children().First().Children<JProperty>())
             {
-                ids.Add(item.Name);
-                amounts.Add((float)item.Value);
+                dictionary[item.Name] = (float)item.Value;
             }
         }
 
         public Inventory GetStartInventory()
         {
             var i = new Inventory();
-            i.ideal = Convert(inventory_ideal_ids, inventory_ideal_amounts);
-            i.stuff = Convert(inventory_start_ids, inventory_start_amounts);
-            i.sizes = Convert(inventory_size_ids, inventory_size_amounts);
+            i.ideal = new Dictionary<string, float>(_ideal);
+            i.stuff = new Dictionary<string, float>(_start);
+            i.sizes = new Dictionary<string, float>(_size);
             i.max_size = max_inventory_size;
             return i;
         }
