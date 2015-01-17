@@ -24,6 +24,7 @@ namespace BazaarBot.WpfApp
         public PlotModel TradesPlot { get; private set; }
         public PlotModel SupplyPlot { get; private set; }
         public PlotModel DemandPlot { get; private set; }
+        public PlotModel ProfitPlot { get; private set; }
         public int BenchmarkRounds { get; set; }
         public string[][] Report { get; set; }
 
@@ -38,28 +39,44 @@ namespace BazaarBot.WpfApp
 
         private void Plot()
         {
-            PricePlot = GetPlot("Prices", bazaar.PriceHistory);
-            DemandPlot = GetPlot("Demand", bazaar.BidHistory);
-            SupplyPlot = GetPlot("Supply", bazaar.AskHistory);
-            TradesPlot = GetPlot("Trades", bazaar.TradeHistory);
+            PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses);
+            DemandPlot = GetPlot("Demand", bazaar.BidHistory, bazaar.CommodityClasses);
+            SupplyPlot = GetPlot("Supply", bazaar.AskHistory, bazaar.CommodityClasses);
+            TradesPlot = GetPlot("Trades", bazaar.TradeHistory, bazaar.CommodityClasses);
+            ProfitPlot = UpdatePlot(ProfitPlot, "Profit", bazaar.ProfitHistory, bazaar.AgentClasses.Keys.ToArray());
             Report = new MarketReport(bazaar).GetData();
             OnPropertyChanged("Report");
+            OnPropertyChanged("ProfitPlot");
             OnPropertyChanged("PricePlot");
             OnPropertyChanged("SupplyPlot");
             OnPropertyChanged("DemandPlot");
             OnPropertyChanged("TradesPlot");
         }
 
+        private PlotModel UpdatePlot(PlotModel plot, string title, Dictionary<string, List<float>> dictionary, IList<string> keys)
+        {
+            if (plot == null)
+                return GetPlot(title, dictionary, keys);
+            else
+            {
+                for (int i= 0;i<plot.Series.Count;i++)
+                {
+                    var series = plot.Series[i] as LineSeries;
+                    series.Points.Add(new DataPoint(bazaar.TotalRounds, BazaarBot.Engine.BazaarBot.Average(dictionary[keys[i]])));
+                }
+                plot.InvalidatePlot(true);
+                return plot;
+            }
+        }
 
-
-        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary)
+        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary, IEnumerable<string> keys)
         {
             var plot = new PlotModel { Title = title };
-            foreach (var commodity in bazaar.CommodityClasses)
+            foreach (var key in keys)
             {
-                var series = new LineSeries { Title = commodity };
-                for (int i = 0; i < dictionary[commodity].Count; i++)
-                    series.Points.Add(new DataPoint(i, dictionary[commodity][i]));
+                var series = new LineSeries { Title = key };
+                for (int i = 0; i < dictionary[key].Count; i++)
+                    series.Points.Add(new DataPoint(i, dictionary[key][i]));
                 plot.Series.Add(series);
             }
             return plot;

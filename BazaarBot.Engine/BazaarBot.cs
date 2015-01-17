@@ -17,7 +17,7 @@ namespace BazaarBot.Engine
 
         Dictionary<string, List<Offer>> _bids = new Dictionary<string, List<Offer>>();
         Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<float>> _profitHistory = new Dictionary<string, List<float>>();
+        public Dictionary<string, List<float>> ProfitHistory = new Dictionary<string, List<float>>();
         public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
         public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
@@ -97,7 +97,7 @@ namespace BazaarBot.Engine
                 //}
                 var agentClass = new AgentClass(a);
                 AgentClasses[agentClass.id] = agentClass;
-                _profitHistory[agentClass.id] = new List<float>();
+                ProfitHistory[agentClass.id] = new List<float>();
             }
         }
 
@@ -164,7 +164,7 @@ namespace BazaarBot.Engine
 
         public float GetProfitAverage(string commodity, int range)
         {
-            var list = _profitHistory[commodity];
+            var list = ProfitHistory[commodity];
             return Average(list, range);
         }
 
@@ -305,7 +305,7 @@ namespace BazaarBot.Engine
                     if (list != null) //do we have a list built up?
                     {				
 					    //log last class' profit
-                        _profitHistory[last_class].Add(Average(list));
+                        ProfitHistory[last_class].Add(Average(list));
 				    }
 				    list = new List<float>();		//make a new list
 				    last_class = curr_class;		
@@ -313,7 +313,7 @@ namespace BazaarBot.Engine
 			    list.Add(a.get_profit());			//push profit onto list
 		    }	
 		    //add the last class too
-            _profitHistory[last_class].Add(Average(list));
+            ProfitHistory[last_class].Add(Average(list));
 		
 		    //sort by id so everything works again
 		    Agents.Sort(sort_agent_id);
