@@ -58,6 +58,22 @@ namespace BazaarBot.Engine
         int _commodityPadding;
         int _agentPadding;
 
+        public string[][] GetData()
+        {
+            var result = new List<string[]>();
+            result.Add(_commodities.ToArray());
+            result.Add(_commodityPrices.ToArray());
+            result.Add(_commodityTrades.ToArray());
+            result.Add(_commodityAsks.ToArray());
+            result.Add(_commodityBids.ToArray());
+            result.Add(_agents.ToArray());
+            result.Add(_agentCount.ToArray());
+            result.Add(_agentMoney.ToArray());
+            result.Add(_agentProfit.ToArray());
+            result.AddRange(GetInventory());
+            return result.ToArray();
+        }
+
         public override string ToString()
         {
             _commodityPadding = _commodities.Union(_commodityPrices).Union(_commodityTrades).Union(_commodityAsks).Union(_commodityBids).Max(p => p.Length) + 1;
@@ -81,23 +97,32 @@ namespace BazaarBot.Engine
 
             result += "\n\n";
 
-            result += string.Join("\n", GetInventory());
+            result += string.Join("\n", GetInventoryAsStrings());
 
             result += "\n";
 
             return result;
         }
 
-        private IEnumerable<string> GetInventory()
+        private IEnumerable<string[]> GetInventory()
+        {
+            yield return new string[] { "" }.Union(_commodities.Skip(1)).ToArray();
+            for (int i = 0; i < _agents.Count - 1; i++)
+            {
+                var result = _inventory.Skip(i * (_commodities.Count - 1)).Take(_commodities.Count - 1).Select(p => p.ToString("N2")).ToList();
+                result.Insert(0, _agents[i + 1]);
+                //var resultStr = new string[] { }.UnionAll(result);
+                var resultStr = result;
+                yield return resultStr.ToArray();
+            }
+        }
+
+        private IEnumerable<string> GetInventoryAsStrings()
         {
             var pad = Math.Max(_commodityPadding, _agentPadding );
-            yield return new string(' ', pad) +  string.Join("", _commodities.Skip(1).Select(p => p.PadRight(pad)));
-
-            // -1s are in here to ignore the heading that is placed in each string array
-            for (int i=0;i<_agents.Count-1;i++)
+            foreach (var line in GetInventory())
             {
-                var result = _inventory.Skip(i*(_commodities.Count-1)).Take(_commodities.Count-1).Select(p => p.ToString("N2").PadRight(pad));
-                yield return _agents[i+1].PadRight(pad) +  string.Join("", result);
+                yield return string.Join("", line.Select(p => p.PadRight(pad)));
             }
         }
     }

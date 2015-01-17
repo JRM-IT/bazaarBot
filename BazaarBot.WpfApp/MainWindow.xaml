@@ -18,6 +18,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Horizontal" Background="Gray" Grid.ColumnSpan="2">
@@ -25,6 +26,8 @@
             <Button Command="{Binding BenchmarkCommand}">Benchmark</Button>
             <TextBox Text="{Binding BenchmarkRounds}" Width="50" />
         </StackPanel>
+        <DataGrid Grid.Column="2" Grid.RowSpan="2" DataContext="{Binding Report}" AutoGenerateColumns="False" DataContextChanged="DataGrid_DataContextChanged"
+                  HeadersVisibility="None" />
         <oxy:PlotView Model="{Binding PricePlot}" Grid.Row="1"/>
         <oxy:PlotView Model="{Binding TradesPlot}" Grid.Row="1" Grid.Column="1"/>
         <oxy:PlotView Model="{Binding SupplyPlot}" Grid.Row="2"/>
