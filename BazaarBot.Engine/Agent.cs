@@ -214,7 +214,6 @@ namespace BazaarBot.Engine
             return Inventory.Query(commodity_);
         }
 
-
         public void ChangeInventory(string commodity, float delta)
         {
             if (commodity == "money")
@@ -299,7 +298,7 @@ namespace BazaarBot.Engine
             var min = a < b ? a : b;
             var max = a < b ? b : a;
             var range = max - min;
-            return (float)RNG.Next() * range + min;
+            return (float)BazaarBot.RNG.Next() * range + min;
         }
 
         private static float min_arr(List<float> a)

@@ -81,7 +81,7 @@ namespace BazaarBot.Engine
                         var chance = act.Chances[i];
 
                         //Roll to see if this happens
-                        if (chance >= 1.0 || RNG.Next() < chance)
+                        if (chance >= 1.0 || BazaarBot.RNG.Next() < chance)
                         {
 
                             float curr_amount = agent.QueryInventory(target);

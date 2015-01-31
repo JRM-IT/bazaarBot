@@ -12,7 +12,7 @@ namespace BazaarBot.ConsoleApp
         const int BENCHMARK_ROUND_COUNT = 30;
         const int SEED = 0;
 
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(SEED);
+        static Engine.BazaarBot bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(SEED));
         
         static void Main(string[] args)
         {

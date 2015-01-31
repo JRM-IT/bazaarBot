@@ -22,10 +22,12 @@ namespace BazaarBot.Engine
         public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
         public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
         public Dictionary<string, List<float>> TradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
-        
-        public BazaarBot(int seed)
+
+        public static IRandomNumberGenerator RNG;
+
+        public BazaarBot(IRandomNumberGenerator rng)
         {
-            RNG.Seed(seed);
+            RNG = rng;
         }
 
         public void LoadJsonSettings(string fileName)

@@ -28,7 +28,7 @@ namespace BazaarBot.Tests
         [TestMethod]
         public void BazaarBotTest()
         {
-            var bazaar = new Engine.BazaarBot(0);
+            var bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(0));
             bazaar.LoadJsonSettings("settings.json");
         }
     }

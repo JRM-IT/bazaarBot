@@ -51,10 +51,11 @@
     </Compile>
     <Compile Include="BazaarBot.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="IRandomNumberGenerator.cs" />
     <Compile Include="Offer.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RNG.cs" />
+    <Compile Include="RandomNumberGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commodity.cs" />

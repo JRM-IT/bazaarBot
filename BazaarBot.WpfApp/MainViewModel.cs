@@ -15,8 +15,8 @@ namespace BazaarBot.WpfApp
 {
     class MainViewModel : INotifyPropertyChanged
     {
-        const int SEED = 0;
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(SEED);
+        const int SEED = 133;
+        static Engine.BazaarBot bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(0));
 
         public ICommand AdvanceCommand { get; set; }
         public ICommand BenchmarkCommand { get; set; }
