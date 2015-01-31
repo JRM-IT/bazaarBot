@@ -78,26 +78,28 @@ namespace BazaarBot.Engine
         {
             _commodityPadding = _commodities.Union(_commodityPrices).Union(_commodityTrades).Union(_commodityAsks).Union(_commodityBids).Max(p => p.Length) + 1;
             
-            var result = string.Join("\n", 
-                string.Join("",_commodities.Select(p => p.PadRight(_commodityPadding))),
-                string.Join("",_commodityPrices.Select(p => p.PadRight(_commodityPadding))),
-                string.Join("",_commodityTrades.Select(p => p.PadRight(_commodityPadding))),
-                string.Join("",_commodityAsks.Select(p => p.PadRight(_commodityPadding))),
-                string.Join("",_commodityBids.Select(p => p.PadRight(_commodityPadding))));
+            var result = string.Join("\n", new [] {
+                string.Join("",_commodities.Select(p => p.PadRight(_commodityPadding)).ToArray()),
+                string.Join("",_commodityPrices.Select(p => p.PadRight(_commodityPadding)).ToArray()),
+                string.Join("",_commodityTrades.Select(p => p.PadRight(_commodityPadding)).ToArray()),
+                string.Join("",_commodityAsks.Select(p => p.PadRight(_commodityPadding)).ToArray()),
+                string.Join("",_commodityBids.Select(p => p.PadRight(_commodityPadding)).ToArray()) 
+            });
 
             result += "\n\n";
 
             _agentPadding = _agents.Union(_agentCount).Union(_agentMoney).Union(_agentProfit).Max(p => p.Length) + 1;
 
-            result += string.Join("\n",
-                string.Join("", _agents.Select(p => p.PadRight(_agentPadding))),
-                string.Join("", _agentCount.Select(p => p.PadRight(_agentPadding))),
-                string.Join("", _agentMoney.Select(p => p.PadRight(_agentPadding))),
-                string.Join("", _agentProfit.Select(p => p.PadRight(_agentPadding))));
+            result += string.Join("\n", new [] {
+                string.Join("", _agents.Select(p => p.PadRight(_agentPadding)).ToArray()),
+                string.Join("", _agentCount.Select(p => p.PadRight(_agentPadding)).ToArray()),
+                string.Join("", _agentMoney.Select(p => p.PadRight(_agentPadding)).ToArray()),
+                string.Join("", _agentProfit.Select(p => p.PadRight(_agentPadding)).ToArray())
+            });
 
             result += "\n\n";
 
-            result += string.Join("\n", GetInventoryAsStrings());
+            result += string.Join("\n", GetInventoryAsStrings().ToArray());
 
             result += "\n";
 
@@ -122,7 +124,7 @@ namespace BazaarBot.Engine
             var pad = Math.Max(_commodityPadding, _agentPadding );
             foreach (var line in GetInventory())
             {
-                yield return string.Join("", line.Select(p => p.PadRight(pad)));
+                yield return string.Join("", line.Select(p => p.PadRight(pad)).ToArray());
             }
         }
     }
