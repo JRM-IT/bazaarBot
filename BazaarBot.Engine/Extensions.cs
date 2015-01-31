@@ -19,11 +19,5 @@ namespace BazaarBot.Engine
             }
             return ret;
         }
-
-        public static T ToObject<T>(this JToken t)
-        {
-            var serializer = new JsonSerializer();
-            return (T)serializer.Deserialize(new JTokenReader(t), typeof(T));
-        }
     }
 }
