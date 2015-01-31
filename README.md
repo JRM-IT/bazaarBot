@@ -7,6 +7,8 @@ This is a C# port of the original [bazaarBot](https://github.com/larsiusprime/ba
 	<img src="https://ci.appveyor.com/api/projects/status/mb3r4b0ecstruo7m?svg=true" alt="Build status">
 </a>
 
+![bazaarBot](/screenshot.png?raw=true)
+
 bazaarBot
 ---------
 
