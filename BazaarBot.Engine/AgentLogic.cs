@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+using SimpleJSON;
 using System;
 namespace BazaarBot.Engine
 {
@@ -7,10 +7,10 @@ namespace BazaarBot.Engine
         string source;
         AgentLogicNode root;
 
-        public AgentLogic(JToken data)
+        public AgentLogic(JSONNode node)
         {
-            source = data.ToString();
-            root = new AgentLogicNode(data);
+            source = node.ToString();
+            root = JSONParser.ParseAgentLogicNode(node); 
         }
 
         public float GetProduction(string commodity, AgentLogicNode currentNode = null)
@@ -123,9 +123,9 @@ namespace BazaarBot.Engine
                 {
                     case "has":	//Do you have something?
                         var has = false;
-                        foreach (var str in currentNode.Parameters.Values<string>())
+                        foreach (var commodity in currentNode.Parameters)
                         {		//look at all the things
-                            float amount = agent.QueryInventory(str.ToString());	//count em
+                            float amount = agent.QueryInventory(commodity);	//count em
                             if (amount > 0)
                                 has = true;					//have it or not
                             if (c.Negated)

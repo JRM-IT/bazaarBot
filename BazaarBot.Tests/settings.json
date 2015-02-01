@@ -50,7 +50,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["wood"],["tools"]],
+					"param":["wood","tools"],
 					"if_true":{
 						"action":[
 							{"produce":["food"],"amount":[2]},
@@ -84,7 +84,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
+					"param":["food","tools"],
 					"if_true":{
 						"action":[
 							{"produce":["ore"],"amount":[2]},
@@ -119,7 +119,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
+					"param":["food","tools"],
 					"if_true":{
 						"action":[
 							{"transform":["ore"],"into":["metal"],"amount":[2]},
@@ -154,7 +154,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
+					"param":["food","tools"],
 					"if_true":{
 						"action":[
 							{"produce":["wood"],"amount":[1]},

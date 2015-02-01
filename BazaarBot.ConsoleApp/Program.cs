@@ -16,7 +16,7 @@ namespace BazaarBot.ConsoleApp
         
         static void Main(string[] args)
         {
-            bazaar.LoadJsonSettings("settings.json");
+            JSONParser.LoadJsonSettings(bazaar, "settings.json");
             Console.WriteLine(new MarketReport(bazaar));
             MenuLoop();
         }

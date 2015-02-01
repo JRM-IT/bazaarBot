@@ -31,7 +31,7 @@ namespace BazaarBot.WpfApp
         public MainViewModel()
         {
             BenchmarkRounds = 30;
-            bazaar.LoadJsonSettings("settings.json");
+            JSONParser.LoadJsonSettings(bazaar, "settings.json");
             AdvanceCommand = new RelayCommand(() => Advance());
             BenchmarkCommand = new RelayCommand(() => Benchmark());
             Plot();

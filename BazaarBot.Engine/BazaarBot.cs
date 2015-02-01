@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+using SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,13 +10,13 @@ namespace BazaarBot.Engine
     {
         public int TotalRounds { get; private set; }
 
-        public List<string> CommodityClasses { get; private set; }
+        public List<string> CommodityClasses { get; set; }
         
-        public Dictionary<string, AgentClass> AgentClasses { get; private set; }
-        public List<Agent> Agents { get; private set; }
+        public Dictionary<string, AgentClass> AgentClasses { get; set; }
+        public List<Agent> Agents { get; set; }
 
-        Dictionary<string, List<Offer>> _bids = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
+        public Dictionary<string, List<Offer>> Bids = new Dictionary<string, List<Offer>>();
+        public Dictionary<string, List<Offer>> Asks = new Dictionary<string, List<Offer>>();
         public Dictionary<string, List<float>> ProfitHistory = new Dictionary<string, List<float>>();
         public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
@@ -28,99 +28,6 @@ namespace BazaarBot.Engine
         public BazaarBot(IRandomNumberGenerator rng)
         {
             RNG = rng;
-        }
-
-        public void LoadJsonSettings(string fileName)
-        {
-            var data = JObject.Parse(File.ReadAllText(fileName));
-            JToken dataCommodoties = null;
-            JToken dataStartConditions = null;
-            JToken dataAgents = null;
-
-            Agents = new List<Agent>();
-            CommodityClasses = new List<string>();
-            AgentClasses = new Dictionary<string, AgentClass>();
-
-            foreach (var property in data.OfType<JProperty>())
-            {
-                switch (property.Name)
-                {
-                    case ("commodities"):
-                        dataCommodoties = property.DeepClone();
-                        
-                        break;
-                    case ("agents"):
-                        dataAgents = property.DeepClone();
-                        
-                        break;
-                    case ("start_conditions"):
-                        dataStartConditions = property.DeepClone();
-                        break;
-                }
-            }
-            ParseCommodities(dataCommodoties as JProperty);
-            ParseAgents(dataAgents as JProperty);
-            ParseStartConditions(dataStartConditions as JProperty);
-        }
-
-        private void ParseStartConditions(JProperty property)
-        {
-            Agents = new List<Agent>();
-            var agents = property.Children().SelectMany(p => p.Children<JProperty>()).First().First;
-            var starts = agents.Children<JProperty>();
-            var agent_index = 0;
-            //Make given number of each agent type
-            foreach (var item in starts)
-            {
-                var val = (int)item.Value;
-                var agent_class = AgentClasses[item.Name];
-                var inv = agent_class.GetStartInventory();
-                var money = agent_class.money;
-
-                for (int i = 0; i < val; i++)
-                {
-                    var a = new Agent(agent_index, item.Name, inv.Copy(), money);
-                    a.init(this);
-                    Agents.Add(a);
-                    agent_index++;
-                }
-            }
-        }
-
-        private void ParseAgents(JProperty property)
-        {
-            AgentClasses = new Dictionary<string, AgentClass>();
-            foreach (var a in property.First.Children())
-            {
-                //a.inventory.size = { };
-                //foreach (var key in _map_commodities.Keys) {
-                //    var c = _map_commodities[key];
-                //    Reflect.setField(a.inventory.size, c.id, c.size);
-                //}
-                var agentClass = new AgentClass(a);
-                AgentClasses[agentClass.id] = agentClass;
-                ProfitHistory[agentClass.id] = new List<float>();
-            }
-        }
-
-        private void ParseCommodities(JProperty property)
-        {
-            var commodities = property.Value.ToObject<Commodity[]>();
-            
-            foreach (var c in commodities)
-            {
-                CommodityClasses.Add(c.id);
-                PriceHistory[c.id] = new List<float>();
-                AskHistory[c.id] = new List<float>();
-                BidHistory[c.id] = new List<float>();
-                TradeHistory[c.id] = new List<float>();
-                PriceHistory[c.id].Add(1);    //start the bidding at $1!
-                AskHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
-                BidHistory[c.id].Add(1);
-                TradeHistory[c.id].Add(1);
-                _asks[c.id] = new List<Offer>();
-                _bids[c.id] = new List<Offer>();
-            }
         }
 
         public void simulate(int rounds)
@@ -151,12 +58,12 @@ namespace BazaarBot.Engine
 
         public void ask(Offer offer)
         {
-            _asks[offer.Commodity].Add(offer);
+            Asks[offer.Commodity].Add(offer);
         }
 
         public void bid(Offer offer)
         {
-            _bids[offer.Commodity].Add(offer);
+            Bids[offer.Commodity].Add(offer);
         }
 
         public float GetPriceAverage(string commodity, int range)
@@ -193,8 +100,8 @@ namespace BazaarBot.Engine
 
         private void resolve_offers(string commodity = "")
         {
-		    var bids = _bids[commodity];
-		    var asks = _asks[commodity];		
+		    var bids = Bids[commodity];
+		    var asks = Asks[commodity];		
 		
 		    //shuffle the books
 		    shuffle(bids);
