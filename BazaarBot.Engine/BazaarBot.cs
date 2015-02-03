@@ -48,7 +48,7 @@ namespace BazaarBot.Engine
 			    foreach (var commodity in CommodityClasses){
 				    resolve_offers(commodity);
 			    }
-			    foreach (var agent in Agents) {
+			    foreach (var agent in Agents.ToList()) {
 				    if (agent.Money <= 0) {
 					    replaceAgent(agent);
 				    }
@@ -144,7 +144,7 @@ namespace BazaarBot.Engine
                     buyer.Trade(quantityTraded);
 							
 				    transfer_commodity(commodity, quantityTraded, seller.AgentId, buyer.AgentId);
-				    transfer_money(quantityTraded * clearingPrice, seller.AgentId, buyer.AgentId);
+				    TransferMoney(quantityTraded * clearingPrice, seller.AgentId, buyer.AgentId);
 									
 				    //update agent price beliefs based on successful transaction
 				    var buyer_a  = Agents[buyer.AgentId];
@@ -347,7 +347,7 @@ namespace BazaarBot.Engine
             buyer.ChangeInventory(commodity_, units_);
         }
 
-        private void transfer_money(float amount, int sellerId, int buyerId)
+        private void TransferMoney(float amount, int sellerId, int buyerId)
         {
             var seller = Agents[sellerId];
             var buyer = Agents[buyerId];

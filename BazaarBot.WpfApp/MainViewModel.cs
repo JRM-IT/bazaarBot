@@ -56,7 +56,7 @@ namespace BazaarBot.WpfApp
 
         private void Plot()
         {
-            PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses);
+            PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses, 100);
             SupplyPlot = GetPlot("Supply", bazaar.VarHistory, bazaar.CommodityClasses);
             TradesPlot = GetPlot("Trades", bazaar.TradeHistory, bazaar.CommodityClasses);
             ProfitPlot = UpdatePlot(ProfitPlot, "Profit", bazaar.ProfitHistory, bazaar.AgentClasses.Keys.ToArray());
@@ -85,14 +85,18 @@ namespace BazaarBot.WpfApp
             }
         }
 
-        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary, IEnumerable<string> keys)
+        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary, IEnumerable<string> keys, int limit = 9999999)
         {
             var plot = new PlotModel { Title = title };
             foreach (var key in keys)
             {
+                var list = dictionary[key];
                 var series = new LineSeries { Title = key };
-                for (int i = 0; i < dictionary[key].Count; i++)
-                    series.Points.Add(new DataPoint(i, dictionary[key][i]));
+                var skip = dictionary[key].Count - limit;
+                if (skip > 0)
+                    list = list.Skip(skip).Take(limit).ToList();
+                for (int i = 0; i < list.Count; i++)
+                    series.Points.Add(new DataPoint(i, list[i]));
                 plot.Series.Add(series);
             }
             return plot;
