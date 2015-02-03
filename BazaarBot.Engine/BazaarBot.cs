@@ -243,6 +243,20 @@ namespace BazaarBot.Engine
             agent.Destroyed = true;
         }
 
+        private string GetUnderservedMarket()
+        {
+            var best_opportunity = get_best_market_opportunity();
+            if (best_opportunity != "")
+            {
+                var best_opportunity_class = get_agent_class_that_makes_most(best_opportunity);
+                if (best_opportunity_class != "")
+                {
+                    return best_opportunity_class;
+                }
+            }
+            return null;
+        }
+
         private string GetMissingClass()
         {
             foreach (var classId in AgentClasses.Keys)
