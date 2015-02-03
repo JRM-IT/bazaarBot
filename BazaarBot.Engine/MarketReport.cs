@@ -6,7 +6,7 @@ namespace BazaarBot.Engine
 {
     public class MarketReport
     {
-        List<string> _commodities = new List<string> { "" };
+        List<string> _commodities;
         List<string> _commodityPrices = new List<string> { "Price" };
         List<string> _commodityTrades = new List<string> { "Trades" };
         List<string> _commodityAsks = new List<string> { "Supply" };
@@ -20,6 +20,7 @@ namespace BazaarBot.Engine
 
         public MarketReport(BazaarBot bazaar)
         {
+            _commodities = new List<string> {"R: " + bazaar.TotalRounds.ToString()};
             var rounds = 1;
             foreach (var commodity in bazaar.CommodityClasses)
             {

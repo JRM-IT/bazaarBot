@@ -15,33 +15,49 @@ namespace BazaarBot.WpfApp
 {
     class MainViewModel : INotifyPropertyChanged
     {
-        const int SEED = 133;
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(0));
+        static Engine.BazaarBot bazaar;
 
         public ICommand AdvanceCommand { get; set; }
         public ICommand BenchmarkCommand { get; set; }
+        public ICommand RestartCommand { get; set; }
+        public ICommand RestartBenchmarkCommand { get; set; }
         public PlotModel PricePlot { get; private set; }
         public PlotModel TradesPlot { get; private set; }
         public PlotModel SupplyPlot { get; private set; }
         public PlotModel DemandPlot { get; private set; }
         public PlotModel ProfitPlot { get; private set; }
         public int BenchmarkRounds { get; set; }
+        public int Seed { get; set; }
         public string[][] Report { get; set; }
 
         public MainViewModel()
         {
             BenchmarkRounds = 30;
-            bazaar.LoadJsonSettings("settings.json");
+            Restart();
             AdvanceCommand = new RelayCommand(() => Advance());
             BenchmarkCommand = new RelayCommand(() => Benchmark());
+            RestartCommand = new RelayCommand(() => Restart());
+            RestartBenchmarkCommand = new RelayCommand(() => RestartAndBenchmark());
+        }
+
+        private void RestartAndBenchmark()
+        {
+            Restart();
+            Benchmark();
+        }
+
+        private void Restart()
+        {
+            bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(Seed));
+            JSONParser.LoadJsonSettings(bazaar, "settings.json");
+            ProfitPlot = null;
             Plot();
         }
 
         private void Plot()
         {
-            PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses);
-            DemandPlot = GetPlot("Demand", bazaar.BidHistory, bazaar.CommodityClasses);
-            SupplyPlot = GetPlot("Supply", bazaar.AskHistory, bazaar.CommodityClasses);
+            PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses, 100);
+            SupplyPlot = GetPlot("Supply", bazaar.VarHistory, bazaar.CommodityClasses);
             TradesPlot = GetPlot("Trades", bazaar.TradeHistory, bazaar.CommodityClasses);
             ProfitPlot = UpdatePlot(ProfitPlot, "Profit", bazaar.ProfitHistory, bazaar.AgentClasses.Keys.ToArray());
             Report = new MarketReport(bazaar).GetData();
@@ -69,14 +85,18 @@ namespace BazaarBot.WpfApp
             }
         }
 
-        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary, IEnumerable<string> keys)
+        private static PlotModel GetPlot(string title, Dictionary<string, List<float>> dictionary, IEnumerable<string> keys, int limit = 9999999)
         {
             var plot = new PlotModel { Title = title };
             foreach (var key in keys)
             {
+                var list = dictionary[key];
                 var series = new LineSeries { Title = key };
-                for (int i = 0; i < dictionary[key].Count; i++)
-                    series.Points.Add(new DataPoint(i, dictionary[key][i]));
+                var skip = dictionary[key].Count - limit;
+                if (skip > 0)
+                    list = list.Skip(skip).Take(limit).ToList();
+                for (int i = 0; i < list.Count; i++)
+                    series.Points.Add(new DataPoint(i, list[i]));
                 plot.Series.Add(series);
             }
             return plot;

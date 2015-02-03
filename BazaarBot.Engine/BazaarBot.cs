@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+using SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,17 +10,18 @@ namespace BazaarBot.Engine
     {
         public int TotalRounds { get; private set; }
 
-        public List<string> CommodityClasses { get; private set; }
+        public List<string> CommodityClasses { get; set; }
         
-        public Dictionary<string, AgentClass> AgentClasses { get; private set; }
-        public List<Agent> Agents { get; private set; }
+        public Dictionary<string, AgentClass> AgentClasses { get; set; }
+        public List<Agent> Agents { get; set; }
 
-        Dictionary<string, List<Offer>> _bids = new Dictionary<string, List<Offer>>();
-        Dictionary<string, List<Offer>> _asks = new Dictionary<string, List<Offer>>();
+        public Dictionary<string, List<Offer>> Bids = new Dictionary<string, List<Offer>>();
+        public Dictionary<string, List<Offer>> Asks = new Dictionary<string, List<Offer>>();
         public Dictionary<string, List<float>> ProfitHistory = new Dictionary<string, List<float>>();
         public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
         public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
+        public Dictionary<string, List<float>> VarHistory = new Dictionary<string, List<float>>();		//# bid (buy) offers per good over time
         public Dictionary<string, List<float>> TradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
 
         public static IRandomNumberGenerator RNG;
@@ -28,99 +29,6 @@ namespace BazaarBot.Engine
         public BazaarBot(IRandomNumberGenerator rng)
         {
             RNG = rng;
-        }
-
-        public void LoadJsonSettings(string fileName)
-        {
-            var data = JObject.Parse(File.ReadAllText(fileName));
-            JToken dataCommodoties = null;
-            JToken dataStartConditions = null;
-            JToken dataAgents = null;
-
-            Agents = new List<Agent>();
-            CommodityClasses = new List<string>();
-            AgentClasses = new Dictionary<string, AgentClass>();
-
-            foreach (var property in data.OfType<JProperty>())
-            {
-                switch (property.Name)
-                {
-                    case ("commodities"):
-                        dataCommodoties = property.DeepClone();
-                        
-                        break;
-                    case ("agents"):
-                        dataAgents = property.DeepClone();
-                        
-                        break;
-                    case ("start_conditions"):
-                        dataStartConditions = property.DeepClone();
-                        break;
-                }
-            }
-            ParseCommodities(dataCommodoties as JProperty);
-            ParseAgents(dataAgents as JProperty);
-            ParseStartConditions(dataStartConditions as JProperty);
-        }
-
-        private void ParseStartConditions(JProperty property)
-        {
-            Agents = new List<Agent>();
-            var agents = property.Children().SelectMany(p => p.Children<JProperty>()).First().First;
-            var starts = agents.Children<JProperty>();
-            var agent_index = 0;
-            //Make given number of each agent type
-            foreach (var item in starts)
-            {
-                var val = (int)item.Value;
-                var agent_class = AgentClasses[item.Name];
-                var inv = agent_class.GetStartInventory();
-                var money = agent_class.money;
-
-                for (int i = 0; i < val; i++)
-                {
-                    var a = new Agent(agent_index, item.Name, inv.Copy(), money);
-                    a.init(this);
-                    Agents.Add(a);
-                    agent_index++;
-                }
-            }
-        }
-
-        private void ParseAgents(JProperty property)
-        {
-            AgentClasses = new Dictionary<string, AgentClass>();
-            foreach (var a in property.First.Children())
-            {
-                //a.inventory.size = { };
-                //foreach (var key in _map_commodities.Keys) {
-                //    var c = _map_commodities[key];
-                //    Reflect.setField(a.inventory.size, c.id, c.size);
-                //}
-                var agentClass = new AgentClass(a);
-                AgentClasses[agentClass.id] = agentClass;
-                ProfitHistory[agentClass.id] = new List<float>();
-            }
-        }
-
-        private void ParseCommodities(JProperty property)
-        {
-            var commodities = property.Value.ToObject<Commodity[]>();
-            
-            foreach (var c in commodities)
-            {
-                CommodityClasses.Add(c.id);
-                PriceHistory[c.id] = new List<float>();
-                AskHistory[c.id] = new List<float>();
-                BidHistory[c.id] = new List<float>();
-                TradeHistory[c.id] = new List<float>();
-                PriceHistory[c.id].Add(1);    //start the bidding at $1!
-                AskHistory[c.id].Add(1);      //start history charts with 1 fake buy/sell bid
-                BidHistory[c.id].Add(1);
-                TradeHistory[c.id].Add(1);
-                _asks[c.id] = new List<Offer>();
-                _bids[c.id] = new List<Offer>();
-            }
         }
 
         public void simulate(int rounds)
@@ -151,12 +59,12 @@ namespace BazaarBot.Engine
 
         public void ask(Offer offer)
         {
-            _asks[offer.Commodity].Add(offer);
+            Asks[offer.Commodity].Add(offer);
         }
 
         public void bid(Offer offer)
         {
-            _bids[offer.Commodity].Add(offer);
+            Bids[offer.Commodity].Add(offer);
         }
 
         public float GetPriceAverage(string commodity, int range)
@@ -193,8 +101,8 @@ namespace BazaarBot.Engine
 
         private void resolve_offers(string commodity = "")
         {
-		    var bids = _bids[commodity];
-		    var asks = _asks[commodity];		
+		    var bids = Bids[commodity];
+		    var asks = Asks[commodity];		
 		
 		    //shuffle the books
 		    shuffle(bids);
@@ -236,7 +144,7 @@ namespace BazaarBot.Engine
                     buyer.Trade(quantityTraded);
 							
 				    transfer_commodity(commodity, quantityTraded, seller.AgentId, buyer.AgentId);
-				    transfer_money(quantityTraded * clearingPrice, seller.AgentId, buyer.AgentId);
+				    TransferMoney(quantityTraded * clearingPrice, seller.AgentId, buyer.AgentId);
 									
 				    //update agent price beliefs based on successful transaction
 				    var buyer_a  = Agents[buyer.AgentId];
@@ -284,6 +192,7 @@ namespace BazaarBot.Engine
 		    //update history		
             AskHistory[commodity].Add(num_asks);
 		    BidHistory[commodity].Add(num_bids);
+            VarHistory[commodity].Add(num_asks - num_bids);
             TradeHistory[commodity].Add(units_traded);
 		
 		    if(units_traded > 0){
@@ -324,7 +233,7 @@ namespace BazaarBot.Engine
 
         private void replaceAgent(Agent agent)
         {
-            var best_id = most_profitable_agent_class();
+            var best_id = MostProfitableAgentClass();
 
             //Special case to deal with very high demand-to-supply ratios
             //This will make them favor entering an underserved market over
@@ -425,30 +334,9 @@ namespace BazaarBot.Engine
             return best_market;
         }
 
-        private string most_profitable_agent_class(int range = 10)
+        private string MostProfitableAgentClass(int range = 10)
         {
-            var best = -99999f;
-            var best_id = "";
-            foreach (var ac_id in AgentClasses.Keys)
-            {
-                var val = GetProfitAverage(ac_id, range);
-                if (val > best)
-                {
-                    best_id = ac_id;
-                    best = val;
-                }
-            }
-            return best_id;
-        }
-
-        private AgentClass get_agent_class(string str)
-        {
-            foreach (var ac in AgentClasses.Values)
-            {
-                if (ac.id== str)
-                    return ac;
-            }
-            return null;
+            return AgentClasses.OrderByDescending(p => GetProfitAverage(p.Key, range)).Select(p => p.Key).First();
         }
 
         private void transfer_commodity(string commodity_, float units_, int seller_id, int buyer_id)
@@ -459,12 +347,12 @@ namespace BazaarBot.Engine
             buyer.ChangeInventory(commodity_, units_);
         }
 
-        private void transfer_money(float amount_, int seller_id, int buyer_id)
+        private void TransferMoney(float amount, int sellerId, int buyerId)
         {
-            var seller = Agents[seller_id];
-            var buyer = Agents[buyer_id];
-            seller.Money += amount_;
-            buyer.Money -= amount_;
+            var seller = Agents[sellerId];
+            var buyer = Agents[buyerId];
+            seller.Money += amount;
+            buyer.Money -= amount;
         }
 
         private static int sort_agent_id(Agent a, Agent b)

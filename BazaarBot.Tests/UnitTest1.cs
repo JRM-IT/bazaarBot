@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using BazaarBot.Engine;
+using SimpleJSON;
 
 namespace BazaarBot.Tests
 {
@@ -12,24 +12,24 @@ namespace BazaarBot.Tests
         [TestMethod]
         public void AgentLogicNodeTest()
         {
-            var json = JObject.Parse(File.ReadAllText("settings.json"));
-            var token = json.SelectToken("agents[0].logic");
-            var logic = new AgentLogicNode(token);
+            var json = JSON.Parse(File.ReadAllText("settings.json"));
+            var node = json["agents"][0]["logic"];
+            JSONParser.ParseAgentLogicNode(node); 
         }
 
         [TestMethod]
         public void AgentClassTest()
         {
-            var json = JObject.Parse(File.ReadAllText("settings.json"));
-            var token = json.SelectToken("agents[0]");
-            var logic = new AgentClass(token);
+            var json = JSON.Parse(File.ReadAllText("settings.json"));
+            var node = json["agents"][0];
+            JSONParser.ParseAgentClass(node);
         }
 
         [TestMethod]
         public void BazaarBotTest()
         {
             var bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(0));
-            bazaar.LoadJsonSettings("settings.json");
+            JSONParser.LoadJsonSettings(bazaar, "settings.json");
         }
     }
 }

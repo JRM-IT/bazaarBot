@@ -19,5 +19,15 @@ namespace BazaarBot.Engine
             }
             return ret;
         }
+
+        public static string RemoveAll(this string s, string toRemove)
+        {
+            var result = s;
+            foreach ( var c in toRemove.AsEnumerable())
+            {
+                result = result.Replace(c.ToString(), "");
+            }
+            return result;
+        }
     }
 }

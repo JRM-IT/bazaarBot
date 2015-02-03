@@ -24,7 +24,12 @@
         <StackPanel Orientation="Horizontal" Background="Gray" Grid.ColumnSpan="2">
             <Button Command="{Binding AdvanceCommand}">Advance</Button>
             <Button Command="{Binding BenchmarkCommand}">Benchmark</Button>
+            <Label>Rounds</Label>
             <TextBox Text="{Binding BenchmarkRounds}" Width="50" />
+            <Label>Seed</Label>
+            <TextBox Text="{Binding Seed}" Width="50" />
+            <Button Command="{Binding RestartCommand}">Restart</Button>
+            <Button Command="{Binding RestartBenchmarkCommand}">Restart + Benchmark</Button>
         </StackPanel>
         <DataGrid Grid.Column="2" Grid.RowSpan="2" DataContext="{Binding Report}" AutoGenerateColumns="False" DataContextChanged="DataGrid_DataContextChanged"
                   HeadersVisibility="None" />

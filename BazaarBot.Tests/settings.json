@@ -1,11 +1,11 @@
 {
 	"start_conditions":{
 		"agents":{
-			"farmer":1,
-			"miner":1,
-			"woodcutter":1,
-			"refiner":1,
-			"blacksmith":1
+			"farmer":10,
+			"miner":10,
+			"woodcutter":10,
+			"refiner":10,
+			"blacksmith":10
 		}		
 	},
 	"commodities":[
@@ -50,7 +50,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["wood"],["tools"]],
+					"param":["wood","tools"],
 					"if_true":{
 						"action":[
 							{"produce":["food"],"amount":[2]},
@@ -63,6 +63,41 @@
 						]
 					}
 				}
+			}
+		},
+		{
+			"id":"woodcutter",
+			"money":100,			
+			"inventory":{
+				"start":{"food":1,"tools":0,"wood":0},
+				"ideal":{"food":3,"tools":2,"wood":0},
+				"max_size":10
+			},
+			"logic":{
+				"condition":["has"],
+				"param":["food","tools"],
+				"if_true":{
+					"action":[
+						{"produce":["wood"],"amount":[2]},
+						{"consume":["food","tools"],"amount":[1,1],"chance":[1,0.1]}
+					]
+				},
+				"if_false":{
+					"condition":["has","!has"],
+					"param":["food","tools"],
+					"if_true":{
+						"action":[
+							{"produce":["wood"],"amount":[1]},
+							{"consume":["food"],"amount":[1]}
+						]
+					},
+					"if_false":{
+						"action":[
+							{"consume":["money"],"amount":[2]}
+						]
+					}
+				}
+			
 			}
 		},
 		{
@@ -84,7 +119,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
+					"param":["food","tools"],
 					"if_true":{
 						"action":[
 							{"produce":["ore"],"amount":[2]},
@@ -119,7 +154,7 @@
 				},
 				"if_false":{
 					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
+					"param":["food","tools"],
 					"if_true":{
 						"action":[
 							{"transform":["ore"],"into":["metal"],"amount":[2]},
@@ -133,41 +168,6 @@
 					}
 				}
 				
-			}
-		},
-		{
-			"id":"woodcutter",
-			"money":100,			
-			"inventory":{
-				"start":{"food":1,"tools":0,"wood":0},
-				"ideal":{"food":3,"tools":2,"wood":0},
-				"max_size":10
-			},
-			"logic":{
-				"condition":["has"],
-				"param":["food","tools"],
-				"if_true":{
-					"action":[
-						{"produce":["wood"],"amount":[2]},
-						{"consume":["food","tools"],"amount":[1,1],"chance":[1,0.1]}
-					]
-				},
-				"if_false":{
-					"condition":["has","!has"],
-					"param":[["food"],["tools"]],
-					"if_true":{
-						"action":[
-							{"produce":["wood"],"amount":[1]},
-							{"consume":["food"],"amount":[1]}
-						]
-					},
-					"if_false":{
-						"action":[
-							{"consume":["money"],"amount":[2]}
-						]
-					}
-				}
-			
 			}
 		},
 		{
