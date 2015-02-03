@@ -18,7 +18,7 @@ namespace BazaarBot.Engine
 
         public override string ToString()
         {
-            return string.Join(",", Conditions.Select(p => p.ToString())) + " " + string.Join(",", Parameters);
+            return string.Join(",", Conditions.Select(p => p.ToString()).ToArray()) + " " + string.Join(",", Parameters);
         }
     }
 }
