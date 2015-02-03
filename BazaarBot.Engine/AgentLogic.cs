@@ -114,31 +114,24 @@ namespace BazaarBot.Engine
             }
         }
 
-        private bool Evaluate(AgentLogicNode currentNode, Agent agent)
+        private bool Evaluate(AgentLogicNode node, Agent agent)
         {
-            //Fail on the first condition that is false
-            foreach (var c in currentNode.Conditions)
+            for (int i = 0; i < node.Conditions.Length; i++)
             {
-                switch (c.Condition)
+                var condition = node.Conditions[i];
+                var commodity = node.Parameters[i];
+                if (condition.Condition == "has")
                 {
-                    case "has":	//Do you have something?
-                        var has = false;
-                        foreach (var commodity in currentNode.Parameters)
-                        {		//look at all the things
-                            float amount = agent.QueryInventory(commodity);	//count em
-                            if (amount > 0)
-                                has = true;					//have it or not
-                            if (c.Negated)
-                            {					//looking for NO-has
-                                if (has) { return false; }
-                            }
-                            else
-                            {								//looking for YES-has
-                                if (!has) { return false; }
-                            }
-                        }
-                        break;
+                    var amount = agent.QueryInventory(commodity);
+                    if (condition.Negated)
+                    {
+                        if (amount > 0)
+                            return false;
+                    }
+                    else if (amount <= 0)
+                        return false;
                 }
+                else throw new Exception("Unknown condition");
             }
             return true;
         }

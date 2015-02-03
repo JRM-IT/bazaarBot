@@ -73,6 +73,7 @@ namespace BazaarBot.Engine
                 bazaar.PriceHistory[id] = new List<float>();
                 bazaar.AskHistory[id] = new List<float>();
                 bazaar.BidHistory[id] = new List<float>();
+                bazaar.VarHistory[id] = new List<float>();
                 bazaar.TradeHistory[id] = new List<float>();
                 bazaar.PriceHistory[id].Add(1);    //start the bidding at $1!
                 bazaar.AskHistory[id].Add(1);      //start history charts with 1 fake buy/sell bid
@@ -87,14 +88,19 @@ namespace BazaarBot.Engine
         {
             if (data["condition"] != null)
             {
-                return new AgentLogicNode
+                var result = new AgentLogicNode
                 {
                     IsLeaf = false,
-                    Conditions = data["condition"].AsArray.Children.Select(p => new AgentCondition(p)).ToList(),
+                    Conditions = data["condition"].AsArray.Children.Select(p => new AgentCondition(p)).ToArray(),
                     Parameters = data["param"].AsArray.Children.Select(p=> p.Value).ToArray(),
                     NodeTrue = GetLogicNode(data["if_true"]),
                     NodeFalse = GetLogicNode(data["if_false"])
                 };
+
+                if (result.Conditions.Length != result.Parameters.Length)
+                    result.Conditions = Enumerable.Repeat(result.Conditions.First(), result.Parameters.Length).ToArray();
+                
+                return result;
             }
             else
             {
@@ -148,8 +154,8 @@ namespace BazaarBot.Engine
         public static AgentLogicAction ParseAgentLogicAction(JSONNode node)
         {
             var action = GetAction(node, "produce") ?? GetAction(node, "consume") ?? GetAction(node, "transform");
-            if (node["amounts"] != null)
-                action.amounts = node["amounts"].AsArray.Children.Select(p => p.Value == "all" ? -1f : p.AsFloat).ToList();
+            if (node["amount"] != null)
+                action.amounts = node["amount"].AsArray.Children.Select(p => p.Value == "all" ? -1f : p.AsFloat).ToList();
             else
                 action.amounts = new List<float>();
 

@@ -9,7 +9,7 @@ namespace BazaarBot.Engine
         public bool IsLeaf;		//if it's a leaf node, it should only have actions
                                 //if it's a branch node, it should only have conditions/params
 
-        public List<AgentCondition> Conditions;
+        public AgentCondition[] Conditions;
         public string[] Parameters;
 
         public AgentLogicNode NodeTrue;

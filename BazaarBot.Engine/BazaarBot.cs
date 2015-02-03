@@ -21,6 +21,7 @@ namespace BazaarBot.Engine
         public Dictionary<string, List<float>> PriceHistory = new Dictionary<string, List<float>>();	//avg clearing price per good over time
         public Dictionary<string, List<float>> AskHistory = new Dictionary<string,List<float>>();		//# ask (sell) offers per good over time
         public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
+        public Dictionary<string, List<float>> VarHistory = new Dictionary<string, List<float>>();		//# bid (buy) offers per good over time
         public Dictionary<string, List<float>> TradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
 
         public static IRandomNumberGenerator RNG;
@@ -47,7 +48,7 @@ namespace BazaarBot.Engine
 			    foreach (var commodity in CommodityClasses){
 				    resolve_offers(commodity);
 			    }
-			    foreach (var agent in Agents.ToList()) {
+			    foreach (var agent in Agents) {
 				    if (agent.Money <= 0) {
 					    replaceAgent(agent);
 				    }
@@ -191,6 +192,7 @@ namespace BazaarBot.Engine
 		    //update history		
             AskHistory[commodity].Add(num_asks);
 		    BidHistory[commodity].Add(num_bids);
+            VarHistory[commodity].Add(num_asks - num_bids);
             TradeHistory[commodity].Add(units_traded);
 		
 		    if(units_traded > 0){
@@ -231,7 +233,7 @@ namespace BazaarBot.Engine
 
         private void replaceAgent(Agent agent)
         {
-            var best_id = most_profitable_agent_class();
+            var best_id = MostProfitableAgentClass();
 
             //Special case to deal with very high demand-to-supply ratios
             //This will make them favor entering an underserved market over
@@ -332,30 +334,9 @@ namespace BazaarBot.Engine
             return best_market;
         }
 
-        private string most_profitable_agent_class(int range = 10)
+        private string MostProfitableAgentClass(int range = 10)
         {
-            var best = -99999f;
-            var best_id = "";
-            foreach (var ac_id in AgentClasses.Keys)
-            {
-                var val = GetProfitAverage(ac_id, range);
-                if (val > best)
-                {
-                    best_id = ac_id;
-                    best = val;
-                }
-            }
-            return best_id;
-        }
-
-        private AgentClass get_agent_class(string str)
-        {
-            foreach (var ac in AgentClasses.Values)
-            {
-                if (ac.id== str)
-                    return ac;
-            }
-            return null;
+            return AgentClasses.OrderByDescending(p => GetProfitAverage(p.Key, range)).Select(p => p.Key).First();
         }
 
         private void transfer_commodity(string commodity_, float units_, int seller_id, int buyer_id)
@@ -366,12 +347,12 @@ namespace BazaarBot.Engine
             buyer.ChangeInventory(commodity_, units_);
         }
 
-        private void transfer_money(float amount_, int seller_id, int buyer_id)
+        private void transfer_money(float amount, int sellerId, int buyerId)
         {
-            var seller = Agents[seller_id];
-            var buyer = Agents[buyer_id];
-            seller.Money += amount_;
-            buyer.Money -= amount_;
+            var seller = Agents[sellerId];
+            var buyer = Agents[buyerId];
+            seller.Money += amount;
+            buyer.Money -= amount;
         }
 
         private static int sort_agent_id(Agent a, Agent b)

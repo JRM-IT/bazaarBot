@@ -15,33 +15,49 @@ namespace BazaarBot.WpfApp
 {
     class MainViewModel : INotifyPropertyChanged
     {
-        const int SEED = 133;
-        static Engine.BazaarBot bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(0));
+        static Engine.BazaarBot bazaar;
 
         public ICommand AdvanceCommand { get; set; }
         public ICommand BenchmarkCommand { get; set; }
+        public ICommand RestartCommand { get; set; }
+        public ICommand RestartBenchmarkCommand { get; set; }
         public PlotModel PricePlot { get; private set; }
         public PlotModel TradesPlot { get; private set; }
         public PlotModel SupplyPlot { get; private set; }
         public PlotModel DemandPlot { get; private set; }
         public PlotModel ProfitPlot { get; private set; }
         public int BenchmarkRounds { get; set; }
+        public int Seed { get; set; }
         public string[][] Report { get; set; }
 
         public MainViewModel()
         {
             BenchmarkRounds = 30;
-            JSONParser.LoadJsonSettings(bazaar, "settings.json");
+            Restart();
             AdvanceCommand = new RelayCommand(() => Advance());
             BenchmarkCommand = new RelayCommand(() => Benchmark());
+            RestartCommand = new RelayCommand(() => Restart());
+            RestartBenchmarkCommand = new RelayCommand(() => RestartAndBenchmark());
+        }
+
+        private void RestartAndBenchmark()
+        {
+            Restart();
+            Benchmark();
+        }
+
+        private void Restart()
+        {
+            bazaar = new Engine.BazaarBot(new StandardRandomNumberGenerator(Seed));
+            JSONParser.LoadJsonSettings(bazaar, "settings.json");
+            ProfitPlot = null;
             Plot();
         }
 
         private void Plot()
         {
             PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses);
-            DemandPlot = GetPlot("Demand", bazaar.BidHistory, bazaar.CommodityClasses);
-            SupplyPlot = GetPlot("Supply", bazaar.AskHistory, bazaar.CommodityClasses);
+            SupplyPlot = GetPlot("Supply", bazaar.VarHistory, bazaar.CommodityClasses);
             TradesPlot = GetPlot("Trades", bazaar.TradeHistory, bazaar.CommodityClasses);
             ProfitPlot = UpdatePlot(ProfitPlot, "Profit", bazaar.ProfitHistory, bazaar.AgentClasses.Keys.ToArray());
             Report = new MarketReport(bazaar).GetData();
