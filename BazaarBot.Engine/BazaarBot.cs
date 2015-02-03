@@ -233,26 +233,24 @@ namespace BazaarBot.Engine
 
         private void replaceAgent(Agent agent)
         {
-            var best_id = MostProfitableAgentClass();
-
-            //Special case to deal with very high demand-to-supply ratios
-            //This will make them favor entering an underserved market over
-            //Just picking the most profitable class
-            var best_opportunity = get_best_market_opportunity();
-            if (best_opportunity != "")
-            {
-                var best_opportunity_class = get_agent_class_that_makes_most(best_opportunity);
-                if (best_opportunity_class != "")
-                {
-                    best_id = best_opportunity_class;
-                }
-            }
+            // force at least one of each class
+            var best_id = GetMissingClass() ?? MostProfitableAgentClass();
 
             var agent_class = AgentClasses[best_id];
             var new_agent = new Agent(agent.Id, best_id, agent_class.GetStartInventory(), agent_class.money);
             new_agent.init(this);
             Agents[agent.Id] = new_agent;
             agent.Destroyed = true;
+        }
+
+        private string GetMissingClass()
+        {
+            foreach (var classId in AgentClasses.Keys)
+            {
+                if (!Agents.Any(p => p.ClassId == classId))
+                    return classId;
+            }
+            return null;
         }
 
         private string get_agent_class_that_makes_most(string commodity_)
