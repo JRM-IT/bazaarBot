@@ -17,10 +17,10 @@ namespace BazaarBot.WpfApp
     {
         static Engine.BazaarBot bazaar;
 
-        public ICommand AdvanceCommand { get; set; }
-        public ICommand BenchmarkCommand { get; set; }
-        public ICommand RestartCommand { get; set; }
-        public ICommand RestartBenchmarkCommand { get; set; }
+        public ICommand AdvanceCommand { get; private set; }
+        public ICommand BenchmarkCommand { get; private set; }
+        public ICommand RestartCommand { get; private set; }
+        public ICommand RestartBenchmarkCommand { get; private set; }
         public PlotModel PricePlot { get; private set; }
         public PlotModel TradesPlot { get; private set; }
         public PlotModel SupplyPlot { get; private set; }
