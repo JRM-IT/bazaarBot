@@ -37,7 +37,7 @@
 			"inventory":{
 				"start":{"food":0,"tools":0,"wood":1},
 				"ideal":{"food":0,"tools":1,"wood":4},
-				"max_size":50
+				"max_size":10
 			},
 			"logic":{
 				"condition":["has"],

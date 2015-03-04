@@ -21,6 +21,7 @@ namespace BazaarBot.WpfApp
         public ICommand BenchmarkCommand { get; private set; }
         public ICommand RestartCommand { get; private set; }
         public ICommand RestartBenchmarkCommand { get; private set; }
+        public ICommand ChangeCommand { get; private set; }
         public PlotModel PricePlot { get; private set; }
         public PlotModel TradesPlot { get; private set; }
         public PlotModel SupplyPlot { get; private set; }
@@ -39,6 +40,49 @@ namespace BazaarBot.WpfApp
             BenchmarkCommand = new RelayCommand(() => Benchmark());
             RestartCommand = new RelayCommand(() => Restart());
             RestartBenchmarkCommand = new RelayCommand(() => RestartAndBenchmark());
+            ChangeCommand = new RelayCommand(() => OpenChangeDialog());
+        }
+
+        private void OpenChangeDialog()
+        {
+            var vm = new ChangeViewModel(bazaar);
+            var dlg = new ChangeWindow { DataContext = vm };
+            var result = dlg.ShowDialog();
+            if (result.HasValue && result.Value)
+            {
+                var amount = vm.Amount;
+                foreach (var agent in bazaar.Agents.Where(p => p.ClassId == vm.SelectedAgentClass))
+                {
+                    if (vm.Amount == 0)
+                        break;
+
+                    var has = agent.QueryInventory(vm.SelectedCommodity);
+                    if (has > 0)
+                    {
+                        if (has < vm.Amount)
+                        {
+                            vm.Amount -= (int)has;
+                            agent.ChangeInventory(vm.SelectedCommodity, -has);
+                        }
+                        else
+                        {
+                            agent.ChangeInventory(vm.SelectedCommodity, -vm.Amount);
+                            vm.Amount = 0;
+                        }
+                    }
+                }
+                if (vm.Amount != amount)
+                {
+                    var delta = amount - vm.Amount;
+                    var cost = delta * bazaar.GetPriceAverage(vm.SelectedCommodity, 1);
+                    var average = cost / bazaar.Agents.Count(p => p.ClassId == vm.SelectedAgentClass);
+                    var profitHistory = bazaar.ProfitHistory[vm.SelectedAgentClass];
+                    var lastProfit = profitHistory.Last();
+                    profitHistory.RemoveAt(profitHistory.Count - 1);
+                    profitHistory.Add(lastProfit + average);
+                    Plot();
+                }
+            }
         }
 
         private void RestartAndBenchmark()

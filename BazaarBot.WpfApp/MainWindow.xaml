@@ -3,13 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:local="clr-namespace:BazaarBot.WpfApp"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="1025">
     <Window.DataContext>
         <local:MainViewModel />
-    </Window.DataContext>
-    
-        
+    </Window.DataContext>        
     <Grid>
+        <Grid.Resources>
+            <Style TargetType="{x:Type TextBox}">
+                <Setter Property="Padding" Value="4"/>
+            </Style>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="3"/>
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
             <RowDefinition />
@@ -30,6 +36,7 @@
             <TextBox Text="{Binding Seed}" Width="50" />
             <Button Command="{Binding RestartCommand}">Restart</Button>
             <Button Command="{Binding RestartBenchmarkCommand}">Restart + Benchmark</Button>
+            <Button Command="{Binding ChangeCommand}">Change</Button>
         </StackPanel>
         <DataGrid Grid.Column="2" Grid.RowSpan="2" DataContext="{Binding Report}" AutoGenerateColumns="False" DataContextChanged="DataGrid_DataContextChanged"
                   HeadersVisibility="None" />
