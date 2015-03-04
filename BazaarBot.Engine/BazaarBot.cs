@@ -23,6 +23,7 @@ namespace BazaarBot.Engine
         public Dictionary<string, List<float>> BidHistory = new Dictionary<string,List<float>>();		//# bid (buy) offers per good over time
         public Dictionary<string, List<float>> VarHistory = new Dictionary<string, List<float>>();		//# bid (buy) offers per good over time
         public Dictionary<string, List<float>> TradeHistory = new Dictionary<string,List<float>>();   //# units traded per good over time
+        public static Dictionary<string, float> Production = new Dictionary<string,float>();
 
         public static IRandomNumberGenerator RNG;
 
@@ -33,6 +34,7 @@ namespace BazaarBot.Engine
 
         public void simulate(int rounds)
         {
+            Production = new Dictionary<string, float>();
 		    for (int round = 0 ; round < rounds; round++) {
                 TotalRounds++;
 			    foreach (var agent in Agents) {
@@ -243,6 +245,20 @@ namespace BazaarBot.Engine
             agent.Destroyed = true;
         }
 
+        private string GetUnderservedMarket()
+        {
+            var best_opportunity = get_best_market_opportunity();
+            if (best_opportunity != "")
+            {
+                var best_opportunity_class = get_agent_class_that_makes_most(best_opportunity);
+                if (best_opportunity_class != "")
+                {
+                    return best_opportunity_class;
+                }
+            }
+            return null;
+        }
+
         private string GetMissingClass()
         {
             foreach (var classId in AgentClasses.Keys)
@@ -415,6 +431,13 @@ namespace BazaarBot.Engine
         private static float Average(IEnumerable<int> values, int range)
         {
             return Average(values.Select(p => (float)p), range);
+        }
+
+        internal static void RecordProduction(string target, float amount)
+        {
+            if (!Production.ContainsKey(target))
+                Production[target] = 0f;
+            Production[target] += amount;
         }
     }
 }

@@ -32,7 +32,8 @@ namespace BazaarBot.WpfApp
 
         public MainViewModel()
         {
-            BenchmarkRounds = 30;
+            BenchmarkRounds = 400;
+            Seed = 4;
             Restart();
             AdvanceCommand = new RelayCommand(() => Advance());
             BenchmarkCommand = new RelayCommand(() => Benchmark());

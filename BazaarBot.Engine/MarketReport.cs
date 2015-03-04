@@ -11,6 +11,7 @@ namespace BazaarBot.Engine
         List<string> _commodityTrades = new List<string> { "Trades" };
         List<string> _commodityAsks = new List<string> { "Supply" };
         List<string> _commodityBids = new List<string> { "Demand" };
+        List<string> _commodityProduction = new List<string> { "Production" } ;
         List<string> _agents = new List<string> { "" };
         List<string> _agentCount = new List<string> { "Count" };
         List<string> _agentMoney = new List<string> { "Money" };
@@ -29,6 +30,7 @@ namespace BazaarBot.Engine
                 _commodityAsks.Add(bazaar.GetAskAverage(commodity, rounds).ToString());
                 _commodityBids.Add(bazaar.GetBidAverage(commodity, rounds).ToString());
                 _commodityTrades.Add(bazaar.GetTradeAverage(commodity, rounds).ToString());
+                _commodityProduction.Add(BazaarBot.Production.ContainsKey(commodity) ? BazaarBot.Production[commodity].ToString() : string.Empty);
             }
 
             foreach (var agentKey in bazaar.AgentClasses.Keys)
@@ -67,6 +69,7 @@ namespace BazaarBot.Engine
             result.Add(_commodityTrades.ToArray());
             result.Add(_commodityAsks.ToArray());
             result.Add(_commodityBids.ToArray());
+            result.Add(_commodityProduction.ToArray());
             result.Add(_agents.ToArray());
             result.Add(_agentCount.ToArray());
             result.Add(_agentMoney.ToArray());
@@ -84,7 +87,7 @@ namespace BazaarBot.Engine
                 string.Join("",_commodityPrices.Select(p => p.PadRight(_commodityPadding)).ToArray()),
                 string.Join("",_commodityTrades.Select(p => p.PadRight(_commodityPadding)).ToArray()),
                 string.Join("",_commodityAsks.Select(p => p.PadRight(_commodityPadding)).ToArray()),
-                string.Join("",_commodityBids.Select(p => p.PadRight(_commodityPadding)).ToArray()) 
+                string.Join("",_commodityBids.Select(p => p.PadRight(_commodityPadding)).ToArray())
             });
 
             result += "\n\n";

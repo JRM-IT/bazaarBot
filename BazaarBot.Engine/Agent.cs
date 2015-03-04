@@ -88,19 +88,19 @@ namespace BazaarBot.Engine
             }
         }
 
-        public void update_price_model(BazaarBot bazaar, string act, string commodity_, bool success, float unit_price_ = 0)
+        public void update_price_model(BazaarBot bazaar, string act, string commodity, bool success, float unit_price_ = 0)
         {
 
             if (success)
             {
                 //Add this to my list of observed trades		
-                var observed_trades = _observedTradingRange[commodity_];
+                var observed_trades = _observedTradingRange[commodity];
                 observed_trades.Add(unit_price_);
             }
 
-            var public_mean_price = bazaar.GetPriceAverage(commodity_, 1);
+            var public_mean_price = bazaar.GetPriceAverage(commodity, 1);
 
-            var belief = price_belief(commodity_);
+            var belief = _priceBeliefs[commodity];
             var mean = (belief.X + belief.Y) / 2;
             var wobble = 0.05;
 
@@ -128,8 +128,8 @@ namespace BazaarBot.Engine
                 belief.Y -= delta_to_mean / 2;
 
                 var special_case = false;
-                var stocks = QueryInventory(commodity_);
-                var ideal = Inventory.Ideal(commodity_);
+                var stocks = QueryInventory(commodity);
+                var ideal = Inventory.Ideal(commodity);
 
                 if (act == "buy" && stocks < LOW_INVENTORY * ideal)
                 {
@@ -147,8 +147,8 @@ namespace BazaarBot.Engine
                 if (!special_case)
                 {
                     //Don't know what else to do? Check supply vs. demand
-                    var asks = bazaar.GetAskAverage(commodity_, 1);
-                    var bids = bazaar.GetBidAverage(commodity_, 1);
+                    var asks = bazaar.GetAskAverage(commodity, 1);
+                    var bids = bazaar.GetBidAverage(commodity, 1);
 
                     //supply_vs_demand: 0=balance, 1=all supply, -1=all demand
                     var supply_vs_demand = (asks - bids) / (asks + bids);
@@ -181,16 +181,16 @@ namespace BazaarBot.Engine
             }
         }
 
-        public Offer create_bid(BazaarBot bazaar, string commodity_, float limit_)
+        public Offer create_bid(BazaarBot bazaar, string commodity, float limit)
         {
-            var bid_price = determine_price_of(commodity_);
-            var ideal = determine_purchase_quantity(bazaar, commodity_);
+            var bid_price = determine_price_of(commodity);
+            var ideal = determine_purchase_quantity(bazaar, commodity);
 
             //can't buy more than limit
-            var quantity_to_buy = ideal > limit_ ? limit_ : ideal;
+            var quantity_to_buy = ideal > limit ? limit : ideal;
             if (quantity_to_buy > 0)
             {
-                return new Offer(Id, commodity_, quantity_to_buy, bid_price);
+                return new Offer(Id, commodity, quantity_to_buy, bid_price);
             }
             return null;
         }
@@ -262,28 +262,23 @@ namespace BazaarBot.Engine
             } return 0;
         }
 
-        private float determine_purchase_quantity(BazaarBot bazaar, string commodity_)
+        private float determine_purchase_quantity(BazaarBot bazaar, string commodity)
         {
-            var mean = bazaar.GetPriceAverage(commodity_, _lookback);
-            var trading_range = observe_trading_range(commodity_);
+            var mean = bazaar.GetPriceAverage(commodity, _lookback);
+            var trading_range = observe_trading_range(commodity);
             if (trading_range != null)
             {
                 var favorability = position_in_range(mean, trading_range.X, trading_range.Y);
                 favorability = 1 - favorability;
                 //do 1 - favorability to see how close we are to the low end
 
-                var amount_to_buy = System.Math.Round(favorability * Inventory.Shortage(commodity_));
+                var amount_to_buy = System.Math.Round(favorability * Inventory.Shortage(commodity));
                 if (amount_to_buy < 1)
                 {
                     amount_to_buy = 1;
                 }
                 return (float)amount_to_buy;
             } return 0;
-        }
-
-        private Point price_belief(string commodity_)
-        {
-            return _priceBeliefs[commodity_];
         }
 
         private Point observe_trading_range(string commodity_)
