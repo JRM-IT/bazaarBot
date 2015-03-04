@@ -66,7 +66,6 @@ namespace BazaarBot.WpfApp
             OnPropertyChanged("ProfitPlot");
             OnPropertyChanged("PricePlot");
             OnPropertyChanged("SupplyPlot");
-            OnPropertyChanged("DemandPlot");
             OnPropertyChanged("TradesPlot");
         }
 
