@@ -14,7 +14,8 @@ namespace BazaarBot.Engine
         public static float LOW_INVENTORY = 0.1f;		//10% of ideal inventory = "LOW"
         public static float HIGH_INVENTORY = 2.0f;	//200% of ideal inventory = "HIGH"
 
-        public static float MIN_PRICE = 0.01f;		//lowest possible price
+        public static float MIN_PRICE = 2f;		//lowest possible price
+        public static float MAX_PRICE = 40f;
 
         private float _moneyLastRound;
         private Dictionary<string, Point> _priceBeliefs;
@@ -172,13 +173,13 @@ namespace BazaarBot.Engine
             }
 
             if (belief.X < MIN_PRICE)
-            {
                 belief.X = MIN_PRICE;
-            }
-            else if (belief.Y < MIN_PRICE)
-            {
+            if (belief.Y < MIN_PRICE)
                 belief.Y = MIN_PRICE;
-            }
+            if (belief.Y > MAX_PRICE)
+                belief.Y = MAX_PRICE;
+            if (belief.X > MAX_PRICE)
+                belief.X = MAX_PRICE;
         }
 
         public Offer create_bid(BazaarBot bazaar, string commodity, float limit)
