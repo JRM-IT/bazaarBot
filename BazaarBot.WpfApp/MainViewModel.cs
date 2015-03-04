@@ -13,7 +13,7 @@ using BazaarBot.Engine;
 
 namespace BazaarBot.WpfApp
 {
-    class MainViewModel : INotifyPropertyChanged
+    class MainViewModel : ViewModel
     {
         static Engine.BazaarBot bazaar;
 
@@ -117,17 +117,6 @@ namespace BazaarBot.WpfApp
         private void Advance()
         {
             Simulate(1);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string property)
-        {
-            var handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(property));
-            }
         }
     }
 }
