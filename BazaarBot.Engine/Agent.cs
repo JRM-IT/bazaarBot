@@ -39,7 +39,7 @@ namespace BazaarBot.Engine
             {
                 var trades = new List<float>();
 
-                var price = bazaar.GetPriceAverage(str, _lookback);
+                var price = 6;
                 trades.Add(price * 0.5f);
                 trades.Add(price * 1.5f);	//push two fake trades to generate a range
 
@@ -62,7 +62,7 @@ namespace BazaarBot.Engine
             else
             {
                 float shortage = Inventory.Shortage(commodity);
-                float space = Inventory.SpaceEmpty;
+                float space = Inventory.SpaceEmpty(commodity);
                 float unit_size = Inventory.Size(commodity);
 
                 if (shortage > 0 && space >= unit_size)
