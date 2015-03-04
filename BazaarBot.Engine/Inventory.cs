@@ -36,20 +36,16 @@ namespace BazaarBot.Engine
             return sizes.ContainsKey(commodityName) ? sizes[commodityName] : -1f;
         }
 
-        public float SpaceEmpty
+        public float SpaceEmpty(string commodityName)
         {
-            get
-            {
-                return max_size - SpaceUsed;
-            }
+            return max_size - SpaceUsed(commodityName);
         }
 
-        public float SpaceUsed
+        public float SpaceUsed(string commodityName)
         {
-            get
-            {
-                return stuff.Sum(p => p.Value);
-            }
+            if (!stuff.ContainsKey(commodityName))
+                return 0;
+            return stuff[commodityName];
         }
 
         public void Change(string commodity, float delta)

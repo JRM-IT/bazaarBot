@@ -35,16 +35,16 @@
 			"id":"farmer",
 			"money":100,
 			"inventory":{
-				"start":{"food":1,"tools":0,"wood":0},
-				"ideal":{"food":0,"tools":2,"wood":3},
-				"max_size":10
+				"start":{"food":0,"tools":0,"wood":1},
+				"ideal":{"food":0,"tools":1,"wood":4},
+				"max_size":50
 			},
 			"logic":{
 				"condition":["has"],
 				"param":["wood","tools"],
 				"if_true":{
 					"action":[
-						{"produce":["food"],"amount":[4]},
+						{"produce":["food"],"amount":[3]},
 						{"consume":["wood","tools"],"amount":[1,1],"chance":[1,0.1]}
 					]
 				},
@@ -70,7 +70,7 @@
 			"money":100,			
 			"inventory":{
 				"start":{"food":1,"tools":0,"wood":0},
-				"ideal":{"food":3,"tools":2,"wood":0},
+				"ideal":{"food":5,"tools":1,"wood":0},
 				"max_size":10
 			},
 			"logic":{
@@ -78,7 +78,7 @@
 				"param":["food","tools"],
 				"if_true":{
 					"action":[
-						{"produce":["wood"],"amount":[2]},
+						{"produce":["wood"],"amount":[3]},
 						{"consume":["food","tools"],"amount":[1,1],"chance":[1,0.1]}
 					]
 				},
@@ -87,7 +87,7 @@
 					"param":["food","tools"],
 					"if_true":{
 						"action":[
-							{"produce":["wood"],"amount":[1]},
+							{"produce":["wood"],"amount":[2]},
 							{"consume":["food"],"amount":[1]}
 						]
 					},
@@ -104,32 +104,42 @@
 			"id":"miner",
 			"money":100,						
 			"inventory":{
-				"start":{"food":1,"tools":0,"ore":0},
-				"ideal":{"food":3,"tools":2},
+				"start":{"food":5,"tools":1,"wood":2},
+				"ideal":{"food":5,"tools":1, "wood":5},
 				"max_size":10
 			},
 			"logic":{
 				"condition":["has"],
-				"param":["food","tools"],
+				"param":["food","tools","wood"],
 				"if_true":{
 					"action":[
 						{"produce":["ore"],"amount":[4]},
-						{"consume":["food","tools"],"amount":[1,1],"chance":[1,0.1]}
+						{"consume":["food","tools","wood"],"amount":[1,1,1],"chance":[1,0.1,1]}
 					]
 				},
 				"if_false":{
-					"condition":["has","!has"],
-					"param":["food","tools"],
+					"condition":["has"],
+					"param":["food","wood"],
 					"if_true":{
 						"action":[
 							{"produce":["ore"],"amount":[2]},
-							{"consume":["food"],"amount":[1]}
+							{"consume":["food","wood"],"amount":[1,1]}
 						]
 					},
 					"if_false":{
-						"action":[
-							{"consume":["money"],"amount":[2]}
-						]
+						"condition":["has"],
+						"param":["food"],
+						"if_true":{
+							"action":[
+								{"produce":["ore"],"amount":[1]},
+								{"consume":["food"],"amount":[1]}
+							]
+						},
+						"if_false":{
+							"action":[
+								{"consume":["money"],"amount":[2]}
+							]
+						}
 					}
 				}
 			
@@ -139,8 +149,8 @@
 			"id":"refiner",
 			"money":100,						
 			"inventory":{
-				"start":{"food":1,"tools":0,"metal":0,"ore":0},
-				"ideal":{"food":3,"tools":2,"ore":5},
+				"start":{"food":5,"tools":1,"metal":0,"ore":0},
+				"ideal":{"food":5,"tools":1,"ore":10},
 				"max_size":10
 			},
 			"logic":{
@@ -174,8 +184,8 @@
 			"id":"blacksmith",
 			"money":100,		
 			"inventory":{
-				"start":{"food":1,"tools":0,"metal":0,"ore":0},
-				"ideal":{"food":3,"tools":2,"metal":5},
+				"start":{"food":5,"tools":0,"metal":0,"ore":0},
+				"ideal":{"food":5,"tools":1,"metal":10},
 				"max_size":10
 			},
 			"logic":{
