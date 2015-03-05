@@ -42,8 +42,7 @@
                   HeadersVisibility="None" />
         <oxy:PlotView Model="{Binding PricePlot}" Grid.Row="1"/>
         <oxy:PlotView Model="{Binding TradesPlot}" Grid.Row="1" Grid.Column="1"/>
-        <oxy:PlotView Model="{Binding SupplyPlot}" Grid.Row="2"/>
-        <oxy:PlotView Model="{Binding DemandPlot}" Grid.Row="2" Grid.Column="1"/>
+        <oxy:PlotView Model="{Binding SupplyPlot}" Grid.Row="2" Grid.ColumnSpan="2"/>
         <oxy:PlotView Model="{Binding ProfitPlot}" Grid.Row="2" Grid.Column="2"/>
     </Grid>
 </Window>

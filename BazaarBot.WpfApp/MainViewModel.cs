@@ -102,7 +102,7 @@ namespace BazaarBot.WpfApp
         private void Plot()
         {
             PricePlot = GetPlot("Prices", bazaar.PriceHistory, bazaar.CommodityClasses, 100);
-            SupplyPlot = GetPlot("Supply", bazaar.VarHistory, bazaar.CommodityClasses);
+            SupplyPlot = GetPlot("Supply / Demand Ratio", bazaar.VarHistory, bazaar.CommodityClasses);
             TradesPlot = GetPlot("Trades", bazaar.TradeHistory, bazaar.CommodityClasses);
             ProfitPlot = UpdatePlot(ProfitPlot, "Profit", bazaar.ProfitHistory, bazaar.AgentClasses.Keys.ToArray());
             Report = new MarketReport(bazaar).GetData();
